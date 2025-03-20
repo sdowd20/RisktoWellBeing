@@ -1,0 +1,44 @@
+---
+title: "Results"
+output: html_document
+date: "2024-07-12"
+---
+
+```{r}
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+
+US_results <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US_risk_results_final.csv")
+US_results <- US_results %>% mutate(RiskCategoryM2 = ifelse(US_results$RiskCategoryM2 %in% "Moderate", "Medium", US_results$RiskCategoryM2))
+  
+Aus_results <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus_risk_results_final.csv")
+Aus_results <- Aus_results %>% mutate(RiskCategoryM2 = ifelse(Aus_results$RiskCategoryM2 %in% "Moderate", "Medium", Aus_results$RiskCategoryM2))
+```
+
+#### Country-wide categorized risk 
+```{r}
+#U.S.
+##Quartile 
+US_transf_cat<- us_map_df(US_results) %>% arrange(Risk)
+US_transf_cat$RiskCategoryM1 <- factor(US_transf_cat$RiskCategoryM1, levels= c("Low", "Medium", "Medium-high", "High"))
+p1 <- US_map_combo_cat(US_transf_cat, US_transf_cat$RiskCategoryM1, "Risk") + scale_colour_manual(values= c("#0072B2", "#66CC99", "#F0E442", "#D55E00")) + labs(tag= "A)")
+
+##20,60,20%
+US_transf_cat$RiskCategoryM2 <- factor(US_transf_cat$RiskCategoryM2, levels= c("Low", "Medium", "High"))
+p2 <- US_map_combo_cat(US_transf_cat, US_transf_cat$RiskCategoryM2, "Risk") + scale_colour_manual(values= c("#0072B2", "#66CC99", "#D55E00")) + labs(tag= "B)")
+
+d <- ggarrange(p1,p2, common.legend= TRUE, legend= "bottom")
+
+##Australia 
+##Quartile 
+Aus_transf_cat <- Aus_results %>% arrange(Risk)
+Aus_transf_cat$RiskCategoryM1 <- factor(Aus_transf_cat$RiskCategoryM1, levels= c("Low", "Medium", "Medium-high", "High"))
+p1_Aus <- graph2(Aus_transf_cat, Aus_shp_df, Aus_transf_cat$RiskCategoryM1) + theme(legend.position= "bottom") + scale_colour_manual(values= c("#0072B2", "#66CC99", "#F0E442", "#D55E00")) + labs(colour= "Risk") + labs(tag= "C)")
+
+##20,60,20%
+Aus_transf_cat$RiskCategoryM2 <- factor(Aus_transf_cat$RiskCategoryM2, levels= c("Low", "Medium", "High"))
+p2_US <- graph2(Aus_transf_cat, Aus_shp_df, Aus_transf_cat$RiskCategoryM2) + theme(legend.position= "bottom") + scale_colour_manual(values= c("#0072B2", "#66CC99", "#D55E00")) + labs(colour= "Risk") + labs(tag= "D)")
+
+d <- ggarrange(p1_Aus,p2_US, common.legend= TRUE, legend= "bottom")
+ggsave("/users/sallydowd/Desktop/Aus_results.png", dpi= 500, width= 8, height= 5)
+```
+

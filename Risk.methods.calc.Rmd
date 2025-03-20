@@ -1,0 +1,108 @@
+---
+title: "Risk.methods.calc"
+output: html_document
+date: "2024-06-12"
+---
+
+###Load in all packages, functions, and datsets needed for this code to run
+```{r}
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+
+#Load original indicator data from Lisa and modify, Indicator data is only for exposure for the U.S. 
+Indicator_data_edt <- read_excel("~/Library/CloudStorage/GoogleDrive-sallycdowd@gmail.com/My Drive/Nye.lab/Coastal.vulnerability/US.data/Indicator.data.xlsx", col_types= "text", sheet= 8) %>% select(GEO_NAME, ComEng, ComRel) %>% rename("Community.Name"= "GEO_NAME")
+
+##Remove NA 
+Indicator_data_edt <- Indicator_data_edt %>% group_by(Community.Name) %>% arrange(ComRel) %>% mutate(ComRel = ifelse(ComRel == "N/A", NA, ComRel)) #some rows were N/A
+Indicator_data_edt <- Indicator_data_edt[complete.cases(Indicator_data_edt),] #only want rows with no missing values
+
+##Make ComEng and ComRec numeric
+Indicator_data_edt[, 2:3] <- apply(Indicator_data_edt[ , 2:3], 2, function(x) as.numeric(as.character(x))) 
+```
+
+###Categorize hazard, exposure, and vulnerability pre-risk calculation: method 2 on NOAA PP 
+
+#### U.S. 
+```{r}
+#Updated on 10/09/24
+#Hazard: MHW cumulative intensity categorized using quantiles
+US_scores_MHW$cumi_quartile <- cut(x= US_scores_MHW$cumi_mean, breaks= quantile(US_scores_MHW$cumi_mean, probs= seq(0,1,0.25)), include.lowest=TRUE,labels=FALSE) #divide range of x into intervals 
+
+#Exposure: Averaged categorical scores for commercial engagement and reliance indices 
+##Average score and then create categorical ranking
+exp_method3 <- Indicator_data_edt %>% mutate(avg_cat_exp = (ComEng + ComRel)/2) %>% select(Community.Name, avg_cat_exp) %>% mutate(across(where(is.numeric), get_categorical_score, .names = "{col}_rank")) %>% dplyr::select(Community.Name, avg_cat_exp_rank) %>% rename("avg_cat_exp"= "avg_cat_exp_rank")
+
+#Vulnerability: Averaged scores for all five indices and then create categorical ranking
+US_scores_MHW <- US_scores_MHW %>% mutate(avg_cat_vuln= (PC1_scores_pd + PC1_scores_pc + PC1_scores_lf + PC1_scores_pov + PC1_scores_hc)/5) %>% mutate(across(avg_cat_vuln, get_categorical_score, .names = "{col}_rank")) %>% dplyr::select(-avg_cat_vuln) %>% rename("avg_cat_vuln"= "avg_cat_vuln_rank")
+
+#Bind datasets
+US_categorized3 <- US_scores_MHW %>% left_join(exp_method3, by= "Community.Name") #drops communities without MHW statistics, Chesapeake Bay communities not included
+```
+
+
+#### Australia
+```{r}
+#Hazard: MHW cumulative intensity categorized using quantiles
+Aus_scores_MHW$cumi_quartile <- cut(x= Aus_scores_MHW$cumi_mean, breaks= quantile(Aus_scores_MHW$cumi_mean, probs= seq(0,1,0.25)), include.lowest=TRUE,labels=FALSE)
+
+#Exposure: % employed in fishing categorized using quantiles
+quantiles_Aus_exp <- quantiles_risk_components(Aus_scores_MHW, Aus_scores_MHW$INDP_fishing, "Method 1: Exposure as quantiles") #quantile(): 25th percentile is lower, 50th percentile is median, and 75th percentile is upper quartile 
+quantiles_Aus_exp <- quantiles_Aus_exp %>% select(LGA, Quartile) %>% rename("quartile_fishing" = "Quartile")
+#Ground-truthing with Ingrid: method 1 makes the most sense for those LGAs included in the high exposure category, maintain communities with 0% employment in fishing (will be in low category)
+
+#Vulnerability:
+Aus_scores_MHW <- Aus_scores_MHW  %>% mutate(avg_cat_vuln= (PC1_scores_pd + PC1_scores_pc + PC1_scores_lf + PC1_scores_hc)/4)
+Aus_scores_MHW <- Aus_scores_MHW %>% mutate(across(avg_cat_vuln, get_categorical_score, .names = "{col}_rank")) %>% dplyr::select(-avg_cat_vuln) %>% rename("avg_cat_vuln"= "avg_cat_vuln_rank")
+
+#Bind datasets
+Aus_categorized3 <- Aus_scores_MHW %>% left_join(quantiles_Aus_exp, by= "LGA")
+```
+
+###Calculate risk 
+```{r}
+US_risk_precat <- risk_precat(US_categorized3, Community.Name, avg_cat_exp)
+US_risk_precat <- US_risk_precat %>% drop_na()
+Aus_risk_precat <- risk_precat(Aus_categorized3, LGA, quartile_fishing)
+
+ggplot(US_risk_precat, aes(x= risk_cumi)) + geom_histogram(bins=20) + xlab("Risk") + ggtitle("Risk to US Communities: Method 2") + standard_theme
+ggsave("/users/sallydowd/desktop/risk.US.png", width= 7, height= 5)
+ggplot(Aus_risk_precat, aes(x= risk_cumi)) + geom_histogram(bins=20) + xlab("Risk") + ggtitle("Risk to Australia LGAs: Method 2") + standard_theme
+ggsave("/users/sallydowd/desktop/risk.Aus.png", width= 7, height= 5)
+```
+
+###Categorize risk
+
+```{r}
+#US 
+##Method 1: quantiles 
+US_risk_precat_quantiles <- risk_quantiles(US_risk_precat, "Categorization 1: Risk & Quartiles")
+
+##Method 2: 20%, 60%, 20%, old way
+quantile(US_risk_precat$risk_cumi, probs = seq(0.20, 1.0, by = .20))
+US_risk_precat_deciles <- US_risk_precat %>% mutate("Category"= ifelse(risk_cumi <= 2.8, "Low", ifelse(risk_cumi >  2.8 & risk_cumi <= 6.8, "Moderate", ifelse(risk_cumi > 6.8, "High", NA))))
+
+#Australia
+##Method 1: quantiles
+Aus_risk_precat_quantiles <- risk_quantiles_Aus(Aus_risk_precat, "Categorization 1: Risk & Quartiles")
+
+##Method 2: 20%, 60%, 20%, old way 
+quantile(Aus_risk_precat$risk_cumi, probs = seq(0.20, 1.0, by = .20))
+Aus_risk_precat_deciles <- Aus_risk_precat %>% mutate("Category"= ifelse(risk_cumi <= 3.5, "Low", ifelse(risk_cumi >  3.5 & risk_cumi <= 21.6, "Moderate", ifelse(risk_cumi > 21.6, "High", NA))))
+```
+
+### Results: organize 
+```{r}
+## add in exposure raw, have all raw then all categorized
+#US
+US_risk_results <- US_risk_precat_quantiles %>% dplyr::select(-c(PCTAGRFRFSH, POPDENS, Quartile, dur_mean)) %>% rename("RiskCategoryM1"= "Category", "Risk"= "risk_cumi", "Vulnerability"= "avg_cat_vuln", "Exposure"= "avg_cat_exp", "Hazard"= "cumi_quartile", "Risk"= "risk_cumi") %>% relocate(Hazard, .before= "Vulnerability")
+to_add <- US_risk_precat_deciles %>% dplyr::select(Community.Name, Category) %>% rename("RiskCategoryM2"= "Category") 
+
+US_risk_results <- US_risk_results %>% left_join(to_add, by= "Community.Name") %>% left_join(Indicator_data_edt, by= "Community.Name") %>% relocate(ComEng, .after= "cumi_mean") %>% relocate(ComRel, .after= "ComEng")
+write.csv(US_risk_results, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US_risk_results_final.csv")
+
+#Australia 
+Aus_risk_results <- Aus_risk_precat_quantiles %>% dplyr::select(-c(POPDENS:dur_mean, Quartile)) %>% rename("RiskCategoryM1"= "Category", "State"= "STE_NAME16", "Hazard"= "cumi_quartile", "Vulnerability"= "avg_cat_vuln", "Exposure"= "quartile_fishing", "Risk"= "risk_cumi") %>% relocate(Hazard, .before= "Vulnerability") %>% relocate(INDP_fishing, .after= cumi_mean)
+to_add_Aus <- Aus_risk_precat_deciles %>% dplyr::select(LGA, Category) %>% rename("RiskCategoryM2"= "Category")
+
+Aus_risk_results <- Aus_risk_results %>% left_join(to_add_Aus, by= "LGA")
+write.csv(Aus_risk_results, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus_risk_results_final.csv")
+```

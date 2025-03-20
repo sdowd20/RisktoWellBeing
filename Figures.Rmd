@@ -1,0 +1,346 @@
+---
+title: "Figures"
+output: html_document
+date: "2024-06-18"
+---
+
+```{r}
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+
+US_risk_results <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US_risk_results_final.csv")
+Aus_risk_results <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus_risk_results_final.csv")
+```
+
+### Manuscript 
+
+#### Fig. 1: Coastal communities map 
+```{r}
+#US
+US_risk_transf <- us_map_df(US_risk_results) 
+
+t1 <- plot_usmap() + geom_point(data= US_risk_transf, aes(x = lon.1, y = lat.1), size=1, col= "#0072B2") + theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black", size=1)) + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank())  + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + labs(tag= "A)")
+ 
+#Australia 
+t2 <- ggplot() + geom_polygon(data = Aus_shp, aes(x=long, y = lat, group = group), fill= "ghostwhite") +  geom_path(data = Aus_shp, aes(x = long, y = lat, group = group), color = "black", size = 0.2) + coord_equal() +geom_polygon() + coord_equal() + geom_point(data= Aus_risk_results, aes(x= Longitude, y= Latitude), size=1, col= "#009E73") + xlab("Longitude") + ylab("Latitude") + theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black", size=1)) + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank()) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + labs(tag= "B)")
+
+library(ggpubr)
+ggarrange(t1, t2, nrow= 1, ncol= 2) + theme(plot.margin = margin(0.25,0.25,0.25,0.25, "cm"))
+ggsave("~/Desktop/coastal.communities.png", width= 8, height= 4, dpi=300)
+
+#World 
+library(rnaturalearth)
+world <- ne_countries(scale = "medium", returnclass = "sf")
+ggplot(data = world) + geom_sf() + standard_theme
+ggsave("/users/sallydowd/Desktop/world.png", width= 7, height= 5, dpi= 300)
+```
+
+#### Fig. 3:
+```{r}
+US_transf_cat<- us_map_df(US_risk_results) %>% arrange(Risk)
+Aus_transf_cat <- Aus_risk_results %>% arrange(Risk)
+cols <- c("1" = "darkgreen", "2" = "#0C7BDC", "3" = "#D35FB7", "4" = "#FFC20A")
+```
+
+```{r}
+#U.S. 
+h1 <- US_map_combo_cat(US_transf_cat, US_transf_cat$Hazard, "Hazard") 
+ggsave("/users/sallydowd/Desktop/h1.png", width= 7, height= 5, dpi= 500)
+e1 <- US_map_combo_cat(US_transf_cat, US_transf_cat$Exposure, "Exposure") 
+ggsave("/users/sallydowd/Desktop/e1.png", width= 7, height= 5, dpi= 500)
+v1 <-  US_map_combo_cat(US_transf_cat, US_transf_cat$Vulnerability, "Vulnerability") 
+ggsave("/users/sallydowd/Desktop/v1.png", width= 7, height= 5, dpi= 500)
+
+US_map_combo_cat(US_transf_cat, US_transf_cat$Vulnerability, "Vulnerability") + theme(legend.direction= "vertical", legend.position= "right") + labs(color= "Metric") +  guides(color=guide_legend(reverse=TRUE))
+ggsave("/users/sallydowd/Desktop/legend.png", width= 8, height= 5, dpi= 500)
+```
+
+```{r}
+#Australia 
+h1_Aus <- aus_graph(Aus_transf_cat, as.factor(Aus_transf_cat$Hazard)) + theme(legend.position= "bottom") + labs(colour= "Hazard") + scale_color_manual(values= cols)
+ggsave("/users/sallydowd/Desktop/h1_Aus.png", width= 5, height= 4, dpi= 500)
+
+e1_Aus <- aus_graph(Aus_transf_cat, as.factor(Aus_transf_cat$Exposure)) + theme(legend.position= "bottom") + labs(colour= "Exposure") +scale_color_manual(values= cols)
+ggsave("/users/sallydowd/Desktop/e1_Aus.png", width= 5, height= 4, dpi= 500)
+v1_Aus <- aus_graph(Aus_transf_cat,  as.factor(Aus_transf_cat$Vulnerability))  + labs(colour= "Vulnerability") +scale_color_manual(values= cols) 
+ggsave("/users/sallydowd/Desktop/v1_Aus.png", width= 5, height= 4, dpi= 500)
+```
+
+#### Fig. 4: 
+```{r}
+US_transf_cat<- us_map_df(US_risk_results) %>% arrange(Risk)
+US_transf_cat$RiskCategoryM1 <- factor(US_transf_cat$RiskCategoryM1, levels= c("Low", "Medium", "Medium-high", "High"))   
+ 
+Aus_transf_cat <- Aus_risk_results %>% arrange(Risk)
+Aus_transf_cat$RiskCategoryM1 <- factor(Aus_transf_cat$RiskCategoryM1, levels= c("Low", "Medium", "Medium-high", "High"))   
+cols <- c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A")
+```
+
+```{r}
+#Quantiles  
+p2 <- US_map_combo_cat(US_transf_cat, US_transf_cat$RiskCategoryM1, "Risk")  +  theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) + theme(legend.position= "none")
+ggsave("/users/sallydowd/Desktop/p2.png", dpi= 500, width= 8, height= 5)
+
+p2_Aus <- aus_graph(Aus_transf_cat, Aus_transf_cat$RiskCategoryM1) + labs(colour= "Risk") + theme(legend.position= "bottom") + scale_color_manual(values= cols)
+ggsave("/users/sallydowd/Desktop/p2_Aus.png", dpi= 500, width= 8, height= 5)
+
+```
+
+#### Fig. 5: 
+```{r}
+ggplot(US_transf_cat, aes(x= Risk, fill= RiskCategoryM1)) + geom_histogram(bins=30) + scale_fill_manual(
+    name = "Category", values = c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Count") + standard_theme + expand_limits(x= 0) + facet_wrap(~Region, ncol=5, scales= "free_y") + labs(tags= "A)")
+ggsave("/users/sallydowd/Desktop/risk.US.hist.png", width= 10, height= 3, dpi= 500)
+
+ggplot(Aus_transf_cat, aes(x= Risk, fill= RiskCategoryM1)) + geom_histogram(bins=20) + scale_fill_manual(
+    name = "Category", values = c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Count") + standard_theme + expand_limits(x= 0) + facet_wrap(~State, ncol=7, scales= "free_y") + labs(tags= "B)") + theme(legend.position= "none")
+ggsave("/users/sallydowd/Desktop/risk.aus.hist.png", width= 10, height= 3, dpi= 500)
+```
+
+
+```{r}
+#Old
+density_plot_edt <- function(df) {
+  ggplot(df, aes(x = Risk, fill = RiskCategoryM1)) + geom_density(adjust= 0.8) + scale_fill_manual(
+    name = "Category", values = c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Density") + standard_theme + expand_limits(x= 0)
+}
+
+#U.S.
+density_plot_edt(US_transf_cat) + facet_wrap(~Region, ncol=5, scales= "free_x") + labs(tags= "A)")
+ggsave("/users/sallydowd/Desktop/risk.density.m1.png", width= 8, height= 3, dpi= 500)
+
+#Australia
+density_plot_edt(Aus_transf_cat) + facet_wrap(~State, ncol=7, scales= "free_x") + labs(tags= "B)") + theme(legend.position= "none")
+ggsave("/users/sallydowd/Desktop/risk.density.Aus.m1.png", width= 10, height= 3, dpi= 500)
+```
+
+#### Fig. 6
+```{r}
+library(corrplot)
+US_risk_results_edt <- US_risk_results %>% mutate(Longitude= Longitude + 360) %>% mutate(avg_cat_exp = (ComEng + ComRel)/2, avg_cat_vuln= (PC1_scores_pd + PC1_scores_pc + PC1_scores_lf + PC1_scores_pov + PC1_scores_hc)/5) %>% dplyr::select(-Hazard, -Exposure, -Vulnerability) %>% rename("Hazard"= "cumi_mean", "Exposure"= "avg_cat_exp", "Vulnerability"= "avg_cat_vuln")
+colnames(US_risk_results_edt) 
+cor_data <- cor(US_risk_results_edt[,c(5:6,7,18,19,15)], method= "kendall")
+cor_test <- cor.mtest(US_risk_results_edt[,c(5:6,7,18,19,15)], method= "kendall")
+corrplot(cor_data, p.mat = cor_test$p, method= "circle", type= "upper", insig='blank', addCoef.col ='black', number.cex = 0.8, diag=FALSE)
+ggsave("/Users/sallydowd/Desktop/us_cor.png", width= 6, height=4)
+
+Aus_risk_results_edt <- Aus_risk_results %>% mutate(avg_cat_vuln= (PC1_scores_pd + PC1_scores_pc + PC1_scores_lf + PC1_scores_hc)/4) %>% dplyr::select(-Hazard, -Exposure, -Vulnerability) %>% rename("Hazard"= "cumi_mean", "Exposure"= "INDP_fishing", "Vulnerability"= "avg_cat_vuln")
+colnames(Aus_risk_results_edt) 
+cor_data <- cor(Aus_risk_results_edt[,c(5,4,6,7,15,12)], method= "kendall")
+cor_test <- cor.mtest(Aus_risk_results_edt[,c(5,4,6,7,15,12)], method= "kendall")
+corrplot(cor_data, p.mat = cor_test$p, method= "circle", type= "upper", insig='blank', addCoef.col ='black', number.cex = 0.8, diag=FALSE)
+ggsave("/users/sallydowd/Desktop/Aus_cor.png", width= 6, height=4)
+```
+
+#### Table 1
+```{r}
+Aus_shp <- st_read(dsn = "/Users/sallydowd/Library/CloudStorage/GoogleDrive-sallycdowd@gmail.com/My Drive/Nye.lab/Coastal.vulnerability/Aus.data/ShapeFiles/Australia", layer = "LGA_2016_AUST")
+Aus_shp <- Aus_shp %>% dplyr::select(LGA_NAME16, AREASQKM16) %>% st_drop_geometry() %>% rename("LGA"= "LGA_NAME16") %>% filter(LGA %in% Aus_risk_results$LGA)
+
+Indicator_data_edt <- read_excel("~/Library/CloudStorage/GoogleDrive-sallycdowd@gmail.com/My Drive/Nye.lab/Coastal.vulnerability/US.data/Indicator.data.xlsx", col_types= "text", sheet= 8)
+Indicator_data_edt <- Indicator_data_edt %>% rename("Community.Name"= "GEO_NAME") %>% filter(Community.Name %in% US_scores$Community.Name) %>% filter(!GEO_ID2 %in% NA) #Need to get rid of Kachemak, AK that has double rows, one with mainly NAs
+```
+
+```{r}
+#Highest and lowest latitude, longitude 
+min(US_risk_results$Longitude)
+max(US_risk_results$Longitude)
+min(Aus_risk_results$Longitude)
+max(Aus_risk_results$Longitude)
+
+min(US_risk_results$Latitude)
+max(US_risk_results$Latitude)
+min(Aus_risk_results$Latitude)
+max(Aus_risk_results$Latitude)
+
+#Number of communities 
+nrow(US_risk_results)
+nrow(Aus_risk_results)
+
+#Average coastal population density
+mean(US_area$POPDENS/2.59)
+mean(Aus_coastal_pop$POPDENS)
+
+
+#Total coastal community area 
+sum(Aus_shp$AREASQKM16)
+
+#Total coastal community area (km^2)
+sum(Aus_shp$AREASQKM16)
+US_area <- Indicator_data_edt %>% dplyr::select(Community.Name, TOTPOP, POPDENS) %>% mutate(TOTPOP= as.numeric(TOTPOP), POPDENS= as.numeric(POPDENS), LandArea_sqmiles= TOTPOP/POPDENS, LandArea_sqkm= LandArea_sqmiles*2.59) 
+sum(US_area$LandArea_sqkm)
+
+#TOTPOP: Estimate of the total population
+#POPDENS: person/sq mile, land area available through Census Tigerline Shapefiles, calculation needed: total population divided by land area in sq miles 
+#LandArea = TOTPOP/POPDENS
+
+#Total coastal zone population 
+sum(US_area$TOTPOP)
+Aus_coastal_pop <- Aus_shp %>% left_join(Aus_scores %>% dplyr::select(LGA, POPDENS)) %>% mutate(people = POPDENS*AREASQKM16)
+sum(Aus_coastal_pop$people)
+
+#Coastal population density
+sum(US_area$TOTPOP)/sum(t2$LandArea_sqkm)
+35456664/1920244
+
+
+```
+
+#### Table 2 & 3 
+```{r}
+#Calculations 
+#Low-High 
+US_risk_results %>% group_by(Region, RiskCategoryM1) %>% tally() %>% group_by(Region) %>% mutate(num_communities= sum(n)) %>% mutate(prop= round((n/num_communities)*100, 1))
+
+Aus_risk_results %>% group_by(State, RiskCategoryM1) %>% tally() %>% group_by(State) %>% mutate(num_communities= sum(n)) %>% mutate(prop= round((n/num_communities)*100, 1))
+
+#Hazard, exposure or vulnerability driven
+dragon <- US_risk_results %>% mutate(driven_by= ifelse(Hazard > Vulnerability & Hazard > Exposure, "Hazard", ifelse(Vulnerability > Hazard & Vulnerability > Exposure, "Vulnerability", ifelse(Exposure > Hazard & Exposure > Vulnerability, "Exposure", "None")))) 
+dragon %>% group_by(Region, driven_by) %>% tally() %>% mutate(num_communities= sum(n)) %>% mutate(prop= round((n/num_communities)*100, 1))
+
+dragon2 <- Aus_risk_results %>% mutate(driven_by= ifelse(Hazard > Vulnerability & Hazard > Exposure, "Hazard", ifelse(Vulnerability > Hazard & Vulnerability > Exposure, "Vulnerability", ifelse(Exposure > Hazard & Exposure > Vulnerability, "Exposure", "None")))) 
+dragon2 %>% group_by(State, driven_by) %>% tally() %>% mutate(num_communities= sum(n)) %>% mutate(prop= round((n/num_communities)*100, 1))
+```
+
+#### Table 4
+```{r}
+#Highest and lowest 
+US_risk_vuln <- US_risk_results %>% dplyr::select(Community.Name, Region, PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc, PC1_scores_pov)
+US_risk_vuln <- US_risk_vuln %>% rowwise() %>% mutate(Max_score = names(.)[which.max(c(PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_pov, PC1_scores_hc)) + 2])
+
+US_comms <- US_risk_vuln %>% group_by(Region) %>% tally() %>% rename("com_num"= "n")
+US_risk_vuln %>% group_by(Region) %>% summarize(count_pd = sum(Max_score == "PC1_scores_pd"), count_pc = sum(Max_score == "PC1_scores_pc"), count_lf = sum(Max_score == "PC1_scores_lf"), count_pov = sum(Max_score == "PC1_scores_pov"), count_hc = sum(Max_score == "PC1_scores_hc")) %>% left_join(US_comms)
+
+Aus_risk_vuln <- Aus_risk_results %>% dplyr::select(LGA, State, PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc)
+Aus_risk_vuln <- Aus_risk_vuln %>% rowwise() %>% mutate(Max_score = names(.)[which.max(c(PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc)) + 2])
+Aus_comms <- Aus_risk_vuln %>% group_by(State) %>% tally() %>% rename("com_num"= "n")
+Aus_risk_vuln %>% group_by(State) %>% summarize(count_pd = sum(Max_score == "PC1_scores_pd"), count_pc = sum(Max_score == "PC1_scores_pc"), count_lf = sum(Max_score == "PC1_scores_lf"), count_hc = sum(Max_score == "PC1_scores_hc")) %>% left_join(Aus_comms)
+```
+
+#### Other talking points 
+```{r}
+##Proportion of communities that are low, medium, medium-high, or high
+US_transf_cat %>% group_by(RiskCategoryM1) %>% tally()
+Aus_transf_cat %>% group_by(RiskCategoryM1) %>% tally()
+
+##Proportion of communities that are low, moderate, or high
+US_transf_cat_edt %>% group_by(RiskCategoryM1) %>% tally()
+Aus_transf_cat_edt %>% group_by(RiskCategoryM1) %>% tally()
+
+##Vulnerability separated by region
+US_risk_results %>% group_by(Region, Vulnerability) %>% tally() %>% group_by(Region) %>% mutate(num_communities= sum(n)) %>% mutate(prop= round((n/num_communities)*100, 1))
+Aus_risk_results %>% group_by(State, Vulnerability) %>% tally() %>% group_by(State) %>% mutate(num_communities= sum(n)) %>% mutate(prop= round((n/num_communities)*100, 1))
+
+##Number of communities removed 
+###US
+US_main_communities <- read_csv("~/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.main.communities.csv") #4236
+US_AK_communities <- read_csv("~/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.AK.communities.csv") #354
+US_HI_communities <- read_csv("~/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.HI.communities.csv") #44 
+#4634 in total 
+Indicator_data <- read_csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.indicator.data.final.csv") #3255 
+#4634 - 3255 = 1379
+
+###Australia 
+only_Aus_cs_orig <- read_csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus_LGAs.csv") #236
+Aus_indicator_data_final <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus.indicator.data.final.csv") #209
+#236-209
+```
+
+#### change to appendix  
+```{r}
+#Quartiles 
+##U.S. 
+US_barplot <- bar_plot_df4cat(US_risk_results, RiskCategoryM1, "Low", "Medium", "Medium-high", "High", Community.Name)
+US_barplot$Community.Name <- factor(US_barplot$Community.Name, levels= unique(US_barplot$Community.Name))
+US_barplot$metric <- factor(US_barplot$metric, levels= c("Hazard", "Exposure", "Vulnerability"))
+ggplot(US_barplot, aes(x= Community.Name, y= metric_value, fill= metric)) + geom_col(width= 0.7, position= position_stack(reverse=TRUE)) + coord_flip() + standard_theme + labs(fill= "Risk component", y= "Categorized value", x= "Community")  + scale_fill_manual(values= c("#D55E00", "#56B4E9", "#F0E442")) + labs(tag= "A)")
+ggsave("/users/sallydowd/Desktop/barplot_US1.png", dpi= 500, height= 5, width= 7)
+
+##Australia
+Aus_barplot <- bar_plot_df4cat(Aus_risk_results, RiskCategoryM1, "Low", "Medium", "Medium-high", "High", LGA)
+Aus_barplot$LGA <- factor(Aus_barplot$LGA, levels= unique(Aus_barplot$LGA))
+Aus_barplot$metric <- factor(Aus_barplot$metric, levels= c("Hazard", "Exposure", "Vulnerability"))
+ggplot(Aus_barplot, aes(x= LGA, y= metric_value, fill= metric)) + geom_col(width= 0.7, position= position_stack(reverse=TRUE)) + coord_flip() + standard_theme + labs(fill= "Risk component", y= "Categorized value", x= "LGA")  + scale_fill_manual(values= c("#D55E00", "#56B4E9", "#F0E442")) + labs(tag= "B)")
+ggsave("/users/sallydowd/Desktop/barplot_Aus1.png", dpi= 500, height= 5, width= 7)
+```
+
+```{r}
+#20, 60, 20%
+##U.S.
+US_barplot <- bar_plot_df(US_risk_results, RiskCategoryM2, "Low", "Medium",  "High", Community.Name)
+US_barplot$Community.Name <- factor(US_barplot$Community.Name, levels= unique(US_barplot$Community.Name))
+US_barplot$metric <- factor(US_barplot$metric, levels= c("Hazard", "Exposure", "Vulnerability"))
+ggplot(US_barplot, aes(x= Community.Name, y= metric_value, fill= metric)) + geom_col(width= 0.7, position= position_stack(reverse=TRUE)) + coord_flip() + standard_theme + labs(fill= "Risk component", y= "Categorized value", x= "Community")  + scale_fill_manual(values= c("#D55E00", "#56B4E9", "#F0E442")) + labs(tag= "A)")
+ggsave("/users/sallydowd/Desktop/barplot_US2.png", dpi= 500, height= 5, width= 7)
+
+##Australia
+Aus_barplot <- bar_plot_df(Aus_risk_results, RiskCategoryM2, "Low", "Medium",  "High", LGA)
+Aus_barplot$LGA <- factor(Aus_barplot$LGA, levels= unique(Aus_barplot$LGA))
+Aus_barplot$metric <- factor(Aus_barplot$metric, levels= c("Hazard", "Exposure", "Vulnerability"))
+ggplot(Aus_barplot, aes(x= LGA, y= metric_value, fill= metric)) + geom_col(width= 0.7, position= position_stack(reverse=TRUE)) + coord_flip() + standard_theme + labs(fill= "Risk component", y= "Categorized value", x= "LGA")  + scale_fill_manual(values= c("#D55E00", "#56B4E9", "#F0E442")) + labs(tag= "B)")
+ggsave("/users/sallydowd/Desktop/barplot_Aus2.png", dpi= 500, height= 5, width= 7)
+```
+
+#### Fig. 3 by region? 
+```{r}
+NE_US_risk <- US_risk_results %>% filter(Region %in% "Northeast")
+NE_US_risk_cumi_mean <- us_map_df(NE_US_risk) %>% arrange(Hazard)
+unique(NE_US_risk$State)
+US_map_zoom_in(c("ME", "NY", "NJ", "DE", "MA", "RI", "CT", "NH", "PA", "VA", "MD"), NE_US_risk_cumi_mean, NE_US_risk_cumi_mean$Hazard, "Hazard") + scale_color_viridis(option= "G") + theme(legend.position = "none")
+
+h1 <- US_map_combo_cat(US_transf_cat, US_transf_cat$Hazard, "Hazard") + theme(panel.border = element_rect(colour = "black", fill=NA, size=1), legend.position= "bottom") 
+```
+
+#### retired 
+```{r}
+library(gt)
+Index_components <- read_excel("/users/sallydowd/Google Drive/My Drive/Nye.lab/Coastal.vulnerability/Figures:tables/Index_components.xlsx")
+tbl1 <- Index_components %>% gt() %>% cols_width(U.S. ~ px(350), Australia ~ px(350)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels())
+tbl1
+gtsave(data=tbl1, "/users/sallydowd/Desktop/tbl1.png")
+```
+
+### Appendix A: 
+
+#### Fig. 1
+
+Run lines 9-19 on Risk.methods.calc.Rmd 
+```{r}
+US_results <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US_risk_results_final.csv")
+Aus_results <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus_risk_results_final.csv")
+
+#Sum PC scores
+US_results_edt <- US_results %>% group_by(Community.Name) %>% mutate(sum_vuln= sum(PC1_scores_pd, PC1_scores_pc, PC1_scores_pov, PC1_scores_lf, PC1_scores_hc)) %>% mutate(sum_exp= sum(ComEng, ComRel)) %>% dplyr::select(Community.Name, cumi_mean, sum_vuln, sum_exp)
+Aus_results_edt <-Aus_results %>% group_by(LGA) %>% mutate(sum_vuln= sum(PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc)) %>% dplyr::select(LGA, cumi_mean, INDP_fishing, sum_vuln)
+
+#Normalize and calculate risk
+min_max_US <- US_results_edt[1] %>% cbind(lapply(US_results_edt[,c(2:4)], minmax_norm)) %>% mutate(risk= cumi_mean*sum_vuln*sum_exp)
+min_max_Aus <- Aus_results_edt[1] %>% cbind(lapply(Aus_results_edt[,c(2:4)], minmax_norm)) %>% mutate(risk= cumi_mean*sum_vuln*INDP_fishing)
+```
+
+```{r}
+p1 <- ggplot(min_max_US, aes(x= risk)) + geom_histogram(bins=30) + xlab("Risk") + ylab("Count") + standard_theme + labs(tags= "A)") + theme(axis.title.x= element_blank(), axis.title.y= element_blank())
+p2 <- ggplot(min_max_Aus, aes(x= risk)) + geom_histogram(bins=30) + xlab("Risk") + ylab("Count") + standard_theme + labs(tags= "B)") + theme(axis.title.x= element_blank(), axis.title.y= element_blank())
+
+p3 <- ggarrange(p1, p2)
+annotate_figure(p3, left= "Count", bottom= "Risk")
+ggsave("/users/sallydowd/Desktop/fig3.png", width= 10, height= 5, dpi= 500)
+
+```
+
+#### Fig. 2 
+```{r}
+t <- US_transf_cat %>% group_by(RiskCategoryM1) %>% summarize(count= n()) %>% mutate(total= sum(count), perc= round((count/total)*100,2))
+
+plot1 <- ggplot(t, aes(x= "", y= count, fill= RiskCategoryM1)) +  geom_col() + coord_polar(theta = "y") + geom_text(aes(label = perc), position = position_stack(vjust = 0.5), col= "white") + scale_fill_manual(
+name = "Category", values = c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Count") + standard_theme + expand_limits(x= 0) + labs(tags= "A)") + theme_void() + theme(legend.position = "none")
+
+t2 <- Aus_transf_cat %>% group_by(RiskCategoryM1) %>% summarize(count= n()) %>% mutate(total= sum(count), perc= round((count/total)*100,2))
+
+plot2 <- ggplot(t2, aes(x= "", y= count, fill= RiskCategoryM1)) +  geom_col() + coord_polar(theta = "y") + geom_text(aes(label = perc), position = position_stack(vjust = 0.5), col= "white") + scale_fill_manual(
+name = "Category", values = c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Count") + standard_theme + expand_limits(x= 0) + labs(tags= "B)") +
+  theme_void() + theme(legend.position = "none")
+
+ggarrange(plot1,plot2)
+ggsave("/users/sallydowd/Desktop/piechart.png", width= 7, height= 5)
+```
+

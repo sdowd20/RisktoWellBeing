@@ -1,0 +1,202 @@
+---
+title: "US.Aus.GetOISST.v2.1"
+output: html_document
+---
+
+#Load in all packages, functions, and datsets needed for this code to run
+```{r}
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+```
+
+#MAINLAND US
+##Get dataset with raw SST 
+```{r}
+###Part 1: Get OISST data from NOAA website for US and place it in folder 
+OISST_sub <- function(times, mypath, lat1, lat2, lon1, lon2){
+  oisst_res <- griddap(x = "ncdcOisst21Agg_LonPM180", url = "https://coastwatch.pfeg.noaa.gov/erddap/", time = times, latitude = c(lat1, lat2), #Southern edge, northern edge
+longitude = c(lon1, lon2), #Western edge, eastern edge
+fields = "sst", store = disk(path = mypath), read = FALSE) 
+}
+
+mypath<-"/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/OISST.dump/US.mainland/V2.1"
+
+  OISST1 <- OISST_sub(c("1982-01-01T00:00:00Z", "1985-12-31T00:00:00Z"),mypath, 21, 53, -132, -60)
+  OISST2 <- OISST_sub(c("1986-01-01T00:00:00Z", "1990-12-31T00:00:00Z"),mypath, 21, 53, -132, -60)
+  OISST3 <- OISST_sub(c("1991-01-01T00:00:00Z", "1999-12-31T00:00:00Z"),mypath, 21, 53, -132, -60)
+  OISST4 <- OISST_sub(c("2000-01-01T00:00:00Z", "2008-12-31T00:00:00Z"),mypath, 21, 53, -132, -60)
+  OISST5 <- OISST_sub(c("2009-01-01T00:00:00Z", "2013-12-03T00:00:00Z"),mypath, 21, 53, -132, -60)
+  OISST6 <- OISST_sub(c("2014-01-01T00:00:00Z", "2021-12-31T00:00:00Z"),mypath, 21, 53, -132, -60)
+
+###Part 2: Use OISST_prep function 
+US_main_filepath <- "/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/OISST.dump/US.mainland/V2.1"
+US_main_SST <- OISST_df(US_main_filepath)
+library(beepr)
+###Part 3: save the raw SST data 
+setwd("/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1")
+saveRDS(US_main_SST, file = paste("US_main_SST_V2.1", ".Rda", sep = ""))
+```
+
+##Get dataset of OISST points that are within a 111 km radius of each community   
+```{r}
+###Get dataset of OISST points that are within a 111 km radius of each community in US
+US_main_SST <- readRDS("/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1/US_main_SST_V2.1.Rda") 
+US_main_SST_final <- overlap_df(US_main_SST, radius1_US_main) ####Retains rows only with lat_lon within radius1
+US_main_SST_final3 <- overlap_df(US_main_SST, radius3_US_main)
+####Visualization to confirm process accuracy
+radius_coords(US_main_SST_final, only_US_main_sf, radius1_US_main)
+radius_coords(US_main_SST_final3, only_US_main_sf, radius3_US_main)
+```
+
+##MHW analysis for US mainland
+```{r}
+###Get yearly mean of event metrics, use group_modify to return a group tibble 
+MHW_block_main <- US_main_SST_final %>% group_by(lon, lat) %>% group_modify(~block_only(.x))
+MHW_block_main <- land_pts_away(MHW_block_main) ####Get rid of land points
+
+MHW_block_main3 <- US_main_SST_final3 %>% group_by(lon, lat) %>% group_modify(~block_only(.x))
+MHW_block_main3 <- land_pts_away(MHW_block_main3) ####Get rid of land points
+
+###Save MHW analysis 
+write.csv(MHW_block_main, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.main.V2.1.csv")
+write.csv(MHW_block_main3, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.main3.V2.1.csv"); beep(sound= 8)
+```
+
+#ALASKA
+##Get dataset with raw SST 
+```{r}
+###Part 1: Get OISST data from NOAA website for AK and place it in folder 
+mypath<-"/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/OISST.dump/US.AK/V2.1"
+  
+  OISST1 <- OISST_sub(c("1982-01-01T00:00:00Z", "1985-12-31T00:00:00Z"),mypath, 48, 75, -179.875, -120)
+  OISST2 <- OISST_sub(c("1986-01-01T00:00:00Z", "1990-12-31T00:00:00Z"),mypath, 48, 75, -179.875, -120)
+  OISST3 <- OISST_sub(c("1991-01-01T00:00:00Z", "1999-12-31T00:00:00Z"),mypath, 48, 75, -179.875, -120)
+  OISST4 <- OISST_sub(c("2000-01-01T00:00:00Z", "2008-12-31T00:00:00Z"),mypath, 48, 75, -179.875, -120)
+  OISST5 <- OISST_sub(c("2009-01-01T00:00:00Z", "2013-12-03T00:00:00Z"),mypath, 48, 75, -179.875, -120)
+  OISST6 <- OISST_sub(c("2014-01-01T00:00:00Z", "2021-12-31T00:00:00Z"),mypath, 48, 75, -179.875, -120)
+  
+###Part 2: Use OISST_prep function 
+AK_filepath <- "/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/OISST.dump/US.AK/V2.1"
+US_AK_SST <- OISST_df(AK_filepath)
+library(beepr)
+###Part 3: Save the raw SST data 
+setwd("/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1")
+saveRDS(US_AK_SST, file = paste("US_AK_SST_V2.1", ".Rda", sep = ""))
+```
+
+##Get dataset of OISST points that are within a 111 km radius of each community  
+```{r}
+US_AK_SST <- readRDS("/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1/US_AK_SST_V2.1.Rda") 
+US_AK_SST_final <- overlap_df(US_AK_SST, radius1_AK) ####Retains rows only with lat_lon within radius1
+US_AK_SST_final3 <- overlap_df(US_AK_SST, radius3_AK)
+####Visualization to confirm process accuracy
+radius_coords(US_AK_SST_final, only_US_AK_sf, radius1_AK)
+radius_coords(US_AK_SST_final3, only_US_AK_sf, radius3_AK)
+```
+
+##MHW analysis for AK
+```{r}
+###Get yearly mean of event metrics, use group_modify to return a group tibble 
+MHW_block_AK <- US_AK_SST_final %>% group_by(lon, lat) %>% group_modify(~block_only(.x))
+MHW_block_AK <- land_pts_away(MHW_block_AK) ####Get rid of land points (there wasn't any, this function might not be needed)
+
+MHW_block_AK3 <- US_AK_SST_final3 %>% group_by(lon, lat) %>% group_modify(~block_only(.x))
+MHW_block_AK3 <- land_pts_away(MHW_block_AK3)
+
+###Save MHW analysis 
+write.csv(MHW_block_AK, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.AK.V2.1.csv")
+write.csv(MHW_block_AK3, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.AK3.V2.1.csv"); beep(sound=8)
+```
+
+#HAWAII
+##Get dataset with raw SST 
+```{r}
+###Part 1: Get OISST data from NOAA website for US and place it in folder 
+mypath<-"/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/OISST.dump/US.HI/V2.1"
+  OISST1 <- OISST_sub(c("1982-01-01T00:00:00Z", "1985-12-31T00:00:00Z"),mypath, 8, 31, -169, -143)
+  OISST2 <- OISST_sub(c("1986-01-01T00:00:00Z", "1990-12-31T00:00:00Z"),mypath, 8, 31, -169, -143)
+  OISST3 <- OISST_sub(c("1991-01-01T00:00:00Z", "1999-12-31T00:00:00Z"),mypath, 8, 31, -169, -143)
+  OISST4 <- OISST_sub(c("2000-01-01T00:00:00Z", "2008-12-31T00:00:00Z"),mypath, 8, 31, -169, -143)
+  OISST5 <- OISST_sub(c("2009-01-01T00:00:00Z", "2013-12-03T00:00:00Z"),mypath, 8, 31, -169, -143)
+  OISST6 <- OISST_sub(c("2014-01-01T00:00:00Z", "2021-12-31T00:00:00Z"),mypath, 8, 31, -169, -143)
+
+###Part 2: Use OISST_prep function 
+HI_filepath <- "/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/OISST.dump/US.HI/V2.1"
+US_HI_SST <- OISST_df(HI_filepath)
+
+###Part 3: save the raw SST data 
+setwd("/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1")
+saveRDS(US_HI_SST, file = paste("US_HI_SST_V2.1", ".Rda", sep = ""))
+```
+
+##Get dataset of OISST points that are within a 111 km radius of each community  
+```{r}
+US_HI_SST <- readRDS("/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1/US_HI_SST_V2.1.Rda") 
+US_HI_SST_final <- overlap_df(US_HI_SST, radius1_HI) ####Retains rows only with lat_lon within radius1
+US_HI_SST_final3 <- overlap_df(US_HI_SST, radius3_HI)
+####Visualization to confirm process accuracy
+radius_coords(US_HI_SST_final, only_US_HI_sf, radius1_HI)
+radius_coords(US_HI_SST_final3, only_US_HI_sf, radius3_HI)
+```
+
+##MHW analysis for HI
+```{r}
+###Get yearly mean of event metrics, use group_modify to return a group tibble 
+MHW_block_HI <- US_HI_SST_final %>% group_by(lon, lat) %>% group_modify(~block_only(.x))
+MHW_block_HI <- land_pts_away(MHW_block_HI) ####Get rid of land points (there wasn't any, this function might not be needed)
+
+MHW_block_HI3 <- US_HI_SST_final3 %>% group_by(lon, lat) %>% group_modify(~block_only(.x))
+MHW_block_HI3 <- land_pts_away(MHW_block_HI3)
+
+###Save MHW analysis 
+write.csv(MHW_block_HI, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.HI.V2.1.csv")
+write.csv(MHW_block_HI3, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.HI3.V2.1.csv")
+```
+
+#AUSTRALIA
+##Get dataset with raw SST 
+```{r}
+###Part 1: Get OISST data from NOAA website for Australia and place it in folder 
+mypath<-"/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/OISST.dump/Aus/V2.1"
+  
+  OISST1_Aus <- OISST_sub(c("1982-01-01T00:00:00Z", "1985-12-31T00:00:00Z"),mypath, -48, -6, 108, 163)
+  OISST2_Aus <- OISST_sub(c("1986-01-01T00:00:00Z", "1990-12-31T00:00:00Z"),mypath, -48, -6, 108, 163)
+  OISST3_Aus <- OISST_sub(c("1991-01-01T00:00:00Z", "1999-12-31T00:00:00Z"),mypath, -48, -6, 108, 163)
+  OISST4_Aus <- OISST_sub(c("2000-01-01T00:00:00Z", "2008-12-31T00:00:00Z"),mypath, -48, -6, 108, 163)
+  OISST5_Aus <- OISST_sub(c("2009-01-01T00:00:00Z", "2013-12-03T00:00:00Z"),mypath, -48, -6, 108, 163)
+  OISST6_Aus <- OISST_sub(c("2014-01-01T00:00:00Z", "2021-12-31T00:00:00Z"),mypath, -48, -6, 108, 163)
+
+###Part 2: Use OISST_prep function 
+Aus_filepath <- "/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/OISST.dump/Aus/V2.1"
+Aus_SST <- OISST_df(Aus_filepath)
+
+###Part 3: save raw SST data 
+setwd("/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1")
+saveRDS(Aus_SST, file = paste("Aus_SST_V2.1", ".Rda", sep = "")); beep(sound=8)
+```
+
+##Get dataset of OISST points that are within a 111 km radius of each community  
+```{r}
+US_Aus_SST <- readRDS("/Users/sallydowd/Google Drive/My Drive/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1/Aus_SST_V2.1.Rda") 
+US_Aus_SST_final <- overlap_df(US_Aus_SST, radius1_Aus) ####Retains rows only with lat_lon within radius1
+library(beepr)
+beep(sound=8)
+radius_coords(US_Aus_SST_final, only_Aus_sf, radius1_Aus)
+US_Aus_SST_final3 <- overlap_df(US_Aus_SST, radius3_Aus)
+####Visualization to confirm process accuracy
+
+radius_coords(US_Aus_SST_final3, only_Aus_sf, radius3_Aus)
+```
+
+##MHW analysis for Australia
+```{r}
+###Get yearly mean of event metrics, use group_modify to return a group tibble 
+MHW_block_Aus <- US_Aus_SST_final %>% group_by(lon, lat) %>% group_modify(~block_only(.x))
+MHW_block_Aus <- land_pts_away(MHW_block_Aus) ####Get rid of land points
+
+MHW_block_Aus3 <- US_Aus_SST_final3 %>% group_by(lon, lat) %>% group_modify(~block_only(.x))
+MHW_block_Aus3 <- land_pts_away(MHW_block_Aus3)
+
+###Save MHW analysis 
+write.csv(MHW_block_Aus, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.Aus.V2.1.csv")
+write.csv(MHW_block_Aus3, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.Aus3.V2.1.csv")
+```

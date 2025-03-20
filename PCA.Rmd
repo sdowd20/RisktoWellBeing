@@ -1,0 +1,76 @@
+---
+title: "PCA"
+output: html_document
+date: "2024-06-19"
+---
+
+#Load in all packages, functions, and datsets needed for this code to run
+```{r}
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+```
+
+#PCA
+
+##US
+```{r}
+set.seed(23)
+#Personal disruption PCA: correlation matrix, all indicators in NOAA's index 
+pers_disruption <- Indicator_data %>% select(PCTUNEMPLD, PCTNODIPLOMA, PCTPOV, PCTFEMALESEPARATD) 
+pd_PCA_prin <- principal_PCA(pers_disruption)
+pd_scores <- scores_PCA(pers_disruption, pd_PCA_prin, "pers_disruption", 3255, Community_ID) %>% select(Community.Name, PC1_scores) %>% rename("PC1_scores_pd" ="PC1_scores") 
+
+#Population composition PCA: correlation matrix, using all indicators in NOAA's index + PCTFORBRN 
+pop_composition <- Indicator_data %>% select(POPWNPCT, PCTHFOFMNOHS, POP0_5PCT, PCTSPKENGNTWL, PCTFORBRN)
+pc_PCA_prin <- principal_PCA(pop_composition)
+pc_scores <- scores_PCA(pers_disruption, pc_PCA_prin, "pop_composition", 3255, Community_ID) %>% select(Community.Name, PC1_scores) %>% rename("PC1_scores_pc" ="PC1_scores")
+
+#Poverty PCA: correlation, using all indicators in NOAA's index
+poverty <- Indicator_data %>% select(PUBLICASSIST, PCTFMINPOV, PCT65POV, PCTCHLDPOV)
+pov_PCA_prin <- principal_PCA(poverty) 
+pov_scores <- scores_PCA(poverty, pov_PCA_prin, "poverty", 3255, Community_ID) %>% select(Community.Name, PC1_scores) %>% rename("PC1_scores_pov" ="PC1_scores")
+
+#Labor force PCA: correlation, using all indicators in NOAA's index
+labor_force <- Indicator_data %>% select(PCTEMPFEMA, PCTLABFORCE, PCTRECSOC)
+lf_PCA_prin <- principal_PCA(labor_force) 
+lf_scores <- scores_PCA(labor_force, lf_PCA_prin, "labor_force", 3255, Community_ID) %>% select(Community.Name, PC1_scores) %>% rename("PC1_scores_lf" ="PC1_scores")
+
+#Housing characteristics PCA: correlation matrix, using all indicators in NOAA's index
+housing_charcs <- Indicator_data %>% select(MED_GRRNT, MED_MTMRG, HUMNR, PCTMBLHM)
+hc_PCA_prin <- principal_PCA(housing_charcs)
+hc_scores <- scores_PCA(housing_charcs, hc_PCA_prin, "housing_charcs", 3255, Community_ID) %>% select(Community.Name, PC1_scores) %>% rename("PC1_scores_hc" ="PC1_scores")
+
+US_scores <- cbind(pd_scores, pc_scores[,2], pov_scores[,2], lf_scores[,2], hc_scores[,2], Indicator_data[,c(24,25)])
+# write.csv(US_scores, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.PC1.scores.csv") #updated on 06/19/24
+```
+
+##Australia
+```{r}
+#Personal disruption PCA: correlation matrix
+#Try 1: using all indicators in social indicators sheet 
+set.seed(23)
+
+pd_Aus <- Aus_indicators %>% select(PCTUNEMPLD, PCTNODIPLOMA, PCTPOV50, PCTFEMALESEPARATED)
+pd_prin_PCA_Aus <- principal_PCA(pd_Aus) 
+pd_scores_Aus <- scores_PCA(pd_Aus, pd_prin_PCA_Aus, "pers_disruption", 209, LGA_ID) %>% select(LGA, PC1_scores) %>% rename("PC1_scores_pd" ="PC1_scores")
+
+#Population composition PCA: correlation matrix
+#Try 2: using all indicators in social indicators sheet except PCTSPKENGNTWL, THIS ONE
+    pc_Aus2 <- Aus_indicators %>% select(PCTINGP, PCTHFOFMNOHS, POPO_9PCT,  PCTFORBRN) 
+    pc_prin_PCA_Aus2 <- principal_PCA(pc_Aus2) 
+    pc_scores_Aus2 <- scores_PCA(pc_Aus2, pc_prin_PCA_Aus2, "pop_composition", 209, LGA_ID) %>% select(LGA, PC1_scores) %>% rename("PC1_scores_pc" ="PC1_scores")
+    
+#Labor force PCA: correlation matrix
+#Using all indicators in social indicators sheet- EETP over PCTSLFEMP 
+    lf_Aus <- Aus_indicators %>% select(PCTEMPFEMA, PCTLABFORCE, EETP)
+    lf_prin_PCA_Aus <- principal_PCA(lf_Aus) 
+    lf_scores_Aus <- scores_PCA(lf_Aus, lf_prin_PCA_Aus, "labor_force", 209, LGA_ID) %>% select(LGA, PC1_scores) %>% rename("PC1_scores_lf" ="PC1_scores")
+   
+#Housing characteristics PCA: correlation matrix
+  hc_Aus2 <- Aus_indicators %>% select(PCTMBLHM, MED_MTMRG, MED_GRRNT)
+  hc_prin_PCA_Aus2 <- principal_PCA(hc_Aus2)
+  hc_scores_Aus2 <- scores_PCA(hc_Aus2, hc_prin_PCA_Aus2, "housing_charcs", 209, LGA_ID) %>% select(LGA, PC1_scores) %>% rename("PC1_scores_hc" ="PC1_scores")
+  
+Aus_scores <- cbind(pd_scores_Aus, pc_scores_Aus2[,2], lf_scores_Aus[,2], hc_scores_Aus2[,2], Aus_indicators[,c(19, 21)])
+# write.csv(Aus_scores, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus.PC1.scores.csv") #updated on 06/19/24
+```
+
