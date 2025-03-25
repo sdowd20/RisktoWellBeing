@@ -1,0 +1,1 @@
+This repository holds data and code for the manuscript titled: "Rising Heat and Rising Risks: Understanding the Impacts of Marine Heatwaves, Fishing Dependence, and Vulnerability to Coastal Communities". 
