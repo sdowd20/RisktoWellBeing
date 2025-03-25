@@ -1,15 +1,9 @@
-#PURPOSE: Vuln.funcs.R is an Rscript that contains the functions and datasets needed for 
-#1) US.Aus.GetOISST.v2.1Rmd 
-#2) US.AUS.MHWradius1.v2.1Rmd 
-#3) Multivariate.stats.Rmd
-#4) Risk.calcs.v2.1.Rmd
-#5) Methods.determination.Rmd
 
+#This R file loads functions and datasets needed for other scripts in this repository. 
 
 ##Load required libraries
-packages <- c("ncdf4", "rerddap", "heatwaveR", "dplyr", "readr", "readxl", "sf", "sp", "ggridges", "ggplot2", "viridis", "ggpubr", "tidyr", "forcats",  "mapproj", "factoextra", "EFAtools", "psych", "reshape2", "devtools", "FactoMineR", "usmap", "fmsb")
+packages <- c("ggpubr", "rnaturalearth","corrplot", "ncdf4", "rerddap", "heatwaveR", "dplyr", "readr", "readxl", "sf", "sp", "ggridges", "ggplot2", "viridis", "ggpubr", "tidyr", "forcats",  "mapproj", "factoextra", "EFAtools", "psych", "reshape2", "devtools", "FactoMineR", "usmap", "fmsb")
 invisible(lapply(packages, library, character.only= TRUE))
-
 
 #1) US.Aus.GetOISST.v2.1.Rmd 
 
