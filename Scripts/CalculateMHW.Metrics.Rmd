@@ -3,11 +3,11 @@ title: "US.Aus.MHWradius1.v2.1"
 output: html_document
 ---
 
-#Summarize MHW stats
+This code links marine heatwave metrics to each coastal community. 
 
 #Load in all packages, functions, and datsets needed for this code to run
 ```{r}
-source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/ToLoad.R")
 ```
 
 #MHW/MCS analysis for mainland US communities 
@@ -73,24 +73,10 @@ US_AK_dur_MHW_ld <- US_AK_dur_MHW_ld[!is.na(US_AK_dur_MHW_ld$dur_mean),]
 write.csv(US_AK_dur_MHW_ld, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.AK.dur.2016.V2.1.csv")
 ```
 
-##US community graphs individual graphs: Don't have removed communities due to indicator data, ches bay  
-```{r}
-###US main:
-graph1(only_US_main_sf, US_main_cumi_MHW, US_main_cumi_MHW$total_icum) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C") 
-graph2.5(US_main_cumi_MHW_ld, US_main_cumi_MHW, US_main_cumi_MHW_ld$cumi_mean) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C") 
 
-###HI:
-graph1(only_US_HI_sf, US_HI_cumi_MHW, US_HI_cumi_MHW$total_icum) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C") 
-graph2.5(US_HI_cumi_MHW_ld, US_HI_cumi_MHW, US_HI_cumi_MHW_ld$cumi_mean) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C") 
+##Edit dataset
 
-###AK: 
-graph1(only_US_AK_sf, US_AK_cumi_MHW, US_AK_cumi_MHW$total_icum) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C") 
-graph2.5(US_AK_cumi_MHW_ld, US_AK_cumi_MHW, US_AK_cumi_MHW_ld$cumi_mean) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C") 
-```
-
-##Combine cumulative intensity and duration datasets for the US and filter dataset to only retain communities present in indicator dataset (Removed communities with no MHW statistics, those in the Ches Bay, those with an NA for at least one column for indicator data)
-
-###Technically, you didn't have to do these filtering steps here for the communities that have cumulative intensity. Could've filtered when got to risk calculations but it's fine --> no need to change it b/c would've gotten the same result either way (this was is just a little more complicated for no reason- actually visualization reasons it's important)
+Combine cumulative intensity and duration datasets for the US and filter the dataset to only retain communities present in indicator dataset (US.indicator.data.final.csv). This removes communities with no MHW statistics, those in the Ches Bay, those with an NA for at least one column for indicator data)
 ```{r}
 ###Part 1: Combine cumulative intensity datasets: 
 US_main_cumi_MHW_ld <- read_csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.main.cumi.2016.V2.1.csv")
@@ -118,84 +104,6 @@ US_total_dur_MHW_ld_final <- US_total_dur_MHW_ld %>% filter(Community.Name %in% 
 #write.csv(US_total_dur_MHW_ld_final, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.total.dur.2016.final.V2.1.csv")
 ```
 
-##US combination graphs 
-```{r}
-##CUMULATIVE INTENSITY
-###Part 1: Make state-based combination graphs for US MHW trends
-###A) State-based MHW graphs based off of Northeast, Southeast, and Pacific regions 
-NE_cumi<- US_total_cumi_MHW_ld_final %>% filter(Region== "Northeast") %>% mutate(State = fct_relevel(State, "ME", "NH", "MA", "RI", "CT", "NY", "NJ", "PA", "DE", "MD", "VA"))
-metric_dist(NE_cumi, NE_cumi$cumi_mean) + 
-labs(title = 'Average MHW cumulative intensity NE 2012-2016') +  scale_fill_viridis_c(option = "C") + geom_hline(yintercept = c("VA", "RI", "PA", "NY", "NJ", "NH", "ME", "MD", "MA", "DE", "CT"))
-
-SE_cumi <- US_total_cumi_MHW_ld_final %>% filter(Region== "Southeast") %>% 
-  mutate(State = fct_relevel(State, "NC", "SC", "GA", "AL", "MS", "LA", "TX", "FL"))
-metric_dist(SE_cumi, SE_cumi$cumi_mean) + labs(title = 'Average MHW cumulative intensity SE 2012-2016') +  scale_fill_viridis_c(option = "C") + geom_hline(yintercept = c("SC", "NC", "GA", "FL", "MS", "LA", "AL", "TX"))
-
-####B) Make dataset with AK and HI as West Coast
-US_AK_cumi_MHW_ld[ ,4] <- "West Coast" #changed region from Alaska to West Coast 
-US_HI_cumi_MHW_ld[ ,4] <- "West Coast" #changed region from Pacific Islands to West Coast 
-US_total_cumi_MHW_ld_WC <- rbind(US_main_cumi_MHW_ld, US_AK_cumi_MHW_ld, US_HI_cumi_MHW_ld)
-
-P_cumi <- US_total_cumi_MHW_ld_WC %>% filter(Region== "West Coast") %>% 
-  mutate(State = fct_relevel(State, "AK", "WA", "OR", "CA", "HI"))
-metric_dist(P_cumi, P_cumi$cumi_mean) + labs(title = 'Average MHW cumulative intensity West Coast 2012-2016') +  scale_fill_viridis_c(option = "C") + geom_hline(yintercept = c("CA", "OR", "WA", "HI", "AK")) 
-
-###Part 2: Box plot with latitudinal bins 
-region_trends_cumi(US_total_cumi_MHW_ld_final, "Northeast", 1) + labs(title = 'Average MHW cumulative intensity 2012-2016 in Northeast US')  
-region_trends_cumi(US_total_cumi_MHW_ld_final, "Southeast", 1) + labs(title = 'Average MHW cumulative intensity 2012-2016 in Southeast US')  
-region_trends_cumi(US_total_cumi_MHW_ld_final, "West Coast", 1) + labs(title = 'Average MHW cumulative intensity 2012-2016 in West Coast US') + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-####West coast excluding AK and HI
-
-##DURATION
-###Part 1: Make state-based combination graphs for US MHW trends
-###A) State-based MHW graphs based off of Northeast, Southeast, and Pacific regions 
-NE_dur <- US_total_dur_MHW_ld_final %>% filter(Region== "Northeast") %>% mutate(State = fct_relevel(State, "ME", "NH", "MA", "RI", "CT", "NY", "NJ", "PA", "DE", "MD", "VA"))
-metric_dist(NE_dur, NE_dur$dur_mean) + 
-labs(title = 'Average MHW duration NE 2012-2016') +  scale_fill_viridis_c(option = "C") + geom_hline(yintercept = c("VA", "RI", "PA", "NY", "NJ", "NH", "ME", "MD", "MA", "DE", "CT"))
-
-SE_dur <- US_total_dur_MHW_ld_final %>% filter(Region== "Southeast") %>% 
-  mutate(State = fct_relevel(State, "NC", "SC", "GA", "AL", "MS", "LA", "TX", "FL"))
-metric_dist(SE_dur, SE_dur$dur_mean) + labs(title = 'Average MHW duration SE 2012-2016') +  scale_fill_viridis_c(option = "C") + geom_hline(yintercept = c("SC", "NC", "GA", "FL", "MS", "LA", "AL", "TX"))
-
-####B) Make dataset with AK and HI as West Coast
-US_AK_dur_MHW_ld[ ,3] <- "West Coast" #changed region from Alaska to West Coast 
-US_HI_dur_MHW_ld[ ,3] <- "West Coast" #changed region from Pacific Islands to West Coast 
-US_total_dur_MHW_ld_WC <- rbind(US_main_dur_MHW_ld, US_AK_dur_MHW_ld, US_HI_dur_MHW_ld)
-
-P_dur <- US_total_dur_MHW_ld_WC %>% filter(Region== "West Coast") %>% 
-  mutate(State = fct_relevel(State, "AK", "WA", "OR", "CA", "HI"))
-metric_dist(P_dur, P_dur$dur_mean) + labs(title = 'Average MHW duration West Coast 2012-2016') +  scale_fill_viridis_c(option = "C") + geom_hline(yintercept = c("CA", "OR", "WA", "HI", "AK")) 
-
-###Part 2: Box plot with latitudinal bins 
-region_trends_dur(US_total_dur_MHW_ld_final, "Northeast", 1) + labs(title = 'Average MHW duration 2012-2016 in Northeast US')
-region_trends_dur(US_total_dur_MHW_ld_final, "Southeast", 1) + labs(title = 'Average MHW duration 2012-2016 in Southeast US')
-region_trends_dur(US_total_dur_MHW_ld_final, "West Coast", 1) + labs(title = 'Average MHW duration 2012-2016 in West Coast US') + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-####West coast excluding AK and HI
-```
-
-##Put MHW trends for mainland US, AK, and HI on one graph --> USE FUNCTIONS INSTEAD
-```{r}
-###Part 1: combine datasets
-only_US_main_orig <- US_main_communities %>% select("Community Name", State, Region, Latitude, Longitude) %>% rename(Community.Name= "Community Name")
-only_US_all_orig <- rbind(only_US_main_orig, only_US_HI_orig, only_US_AK_orig)
-only_US_all_orig = st_as_sf(only_US_all_orig, coords=c("Longitude","Latitude"))
-
-###Part 2: generate graphs for cumulative intensity and duration
-graph2(US_total_cumi_MHW_ld_final, US_shp_df, US_total_cumi_MHW_ld_final$cumi_mean) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C") + xlim(-180, -50) + ylim(15,75) ####Says 2963 rows were removed but this is b/c the shapefile we use has all US territories (some out of our study range)
-
-graph2(US_total_dur_MHW_ld_final, US_shp_df, US_total_dur_MHW_ld_final$dur_mean) + ggtitle("Average duration 2012-2016") + scale_colour_viridis(option= "C") + xlim(-180, -50) + ylim(15,75) ####Says 2963 rows were removed but this is b/c the shapefile we use has all US territories (some out of our study range)
-
-graph2.5(US_total_cumi_MHW_ld_final, US_all_cumi_MHW, US_total_cumi_MHW_ld_final$cumi_mean) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C") 
-
-###Part 2: transform data to match usmap package projection (Albers Equal Area projection)
-US_total_cumi_MHW_ld_final <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.total.cumi.2016.final.V2.1.csv")
-US_cumi_mod <- US_total_cumi_MHW_ld_final %>% rename("lon"= "Longitude", "lat"= "Latitude") %>% select(lat, everything()) %>% select(lon, everything()) #move latitude and longitude to the front of dataset 
-US_cumi_transformed <- usmap_transform(US_cumi_mod) ####Discarded datum unknown error: I think this is ok and makes sense b/c US_cumi_mod doesn't have a coordinate reference system (just have lat/lon)
-
-plot_usmap() + geom_point(data= US_cumi_transformed, aes(x = lon.1, y = lat.1, colour= cumi_mean), size=1.5) + standard_theme + labs(title= "Average cumulative MHW intensity", subtitle= "U.S. coastal communities, 2012-2016", colour= "Cumulative intensity") + theme(panel.background = element_rect(fill= "gray"), axis.text.x = element_blank(),
-  axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank()) + scale_colour_viridis(option= "C")
-```
-
 #MHW/MCS analysis for Australia LGAs  
 
 ##Link MHW statistics with each Australia LGA for 2012-2016
@@ -217,151 +125,4 @@ Australia_dur_MHW_ld <- metrics_df(only_Aus_cs_orig, radius1_Aus, Australia_MHW_
 Australia_dur_MHW_ld <- Australia_dur_MHW_ld %>% rename("dur_N"= "input_N", "dur_mean"= "input_mean", "dur_var"= "input_var", "dur_max"= "input_max", "dur_min"= "input_min", "LGA"= "LGA_NAME16")
 Australia_dur_MHW_ld <- Australia_dur_MHW_ld[!is.na(Australia_dur_MHW_ld$dur_mean),] 
 write.csv(Australia_dur_MHW_ld, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Australia.dur.2016.V2.1.csv")
-```
-
-##Australia LGA cumulative intensity graphs
-```{r}
-###Part 1: Step 3) Filter Australia cumulative intensity and duration dataset to match communities in the Indicator_data_final (steps completed already: 1) Filtered coastal LGAs dataset based off communities in Australia_cumi_MHW_ld, joined coastal_LGAs with Census_data_real to form Aus_indicators so communities that had MHW stats 2) Removed incomplete cases based off missing parameters for indicators within Aus_indicators)
-Aus_indicator_data_final <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus.indicator.data.final.csv") ####these are the final coastal communities we are using so need to make sure these are the only ones we use in MHW analysis
-Australia_cumi_MHW_ld <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Australia.cumi.2016.V2.1.csv")
-Aus_LGA_indicator <- Aus_indicator_data_final$LGA
-Australia_cumi_MHW_ld_final <- Australia_cumi_MHW_ld %>% filter(LGA %in% Aus_LGA_indicator) %>% arrange(LGA) 
-#write.csv(Australia_cumi_MHW_ld_final, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Australia.cumi.2016.final.V2.1.csv")
-
-####Duration: 
-Australia_dur_MHW_ld_final <- Australia_dur_MHW_ld %>% filter(LGA %in% Aus_LGA_indicator)
-write.csv(Australia_dur_MHW_ld_final, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Australia.dur.2016.final.V2.1.csv")
-
-###Part 2: generate graphs for cumulative intensity and duration
-graph2(Australia_cumi_MHW_ld_final, Aus_shp_df, Australia_cumi_MHW_ld_final$cumi_mean) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C")  ####Says 2963 rows were removed but this is b/c the shapefile we use has all US territories (some out of our study range)
-
-graph2(Australia_dur_MHW_ld_final, Aus_shp_df, Australia_dur_MHW_ld_final$dur_mean) + ggtitle("Average duration 2012-2016") + scale_colour_viridis(option= "C") ####Says 2963 rows were removed but this is b/c the shapefile we use has all US territories (some out of our study range)
-
-graph2.5(US_main_cumi_MHW_ld, US_main_cumi_MHW, US_main_cumi_MHW_ld$cumi_mean) + ggtitle("Average MHW cumulative intensity 2012-2016") + scale_colour_viridis(option= "C") 
-```
-
-#RADIUS 1 AND 3 COMPARISON for cumulative intensity
-
-##Get MHW metrics for radius 3 for US and Australia 
-```{r}
-US_cumi1 <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.total.cumi.2016.final.V2.1.csv")
-
-Aus_cumi1 <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Australia.cumi.2016.final.V2.1.csv")
-```
-
-```{r}
-###Part 1: Link cumulative intensity MHW statistics with each community for radius of 333 km
-###US main:
-US_main_MHW3 <- read_csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.main3.V2.1.csv")
-US_main_cumi_MHW3 <-aggregate(total_icum ~ lat_lon + lat + lon, US_main_MHW3[between(US_main_MHW3$year, 2012, 2016),], FUN = mean) ####Get average of total cumulative intensity for each set of coordinates between 2012-2016
-US_main_MHW_geom3 = st_as_sf(US_main_cumi_MHW3, coords=c("lon","lat"))
-US_main_cumi_MHW_ld3 <- metrics_df(only_US_main_orig, radius3_US_main, US_main_MHW_geom3, 5) ####Find intersection of 111 km around each community with MHW coordinates, take average of total cumulative intensity (averaged over 2012-2016) over these points 
-US_main_cumi_MHW_ld3 <- US_main_cumi_MHW_ld3 %>% rename("cumi_N"= "input_N", "cumi_mean"= "input_mean", "cumi_var"= "input_var", "cumi_max"= "input_max", "cumi_min"= "input_min")
-US_main_cumi_MHW_ld3 <- US_main_cumi_MHW_ld3[!is.na(US_main_cumi_MHW_ld3$cumi_mean),] 
-
-###HI:
-US_HI_MHW3 <- read_csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.HI3.V2.1.csv")
-US_HI_cumi_MHW3 <-aggregate(total_icum ~ lat_lon + lat + lon, US_HI_MHW3[between(US_HI_MHW3$year, 2012, 2016),], FUN = mean) 
-US_HI_MHW_geom3 = st_as_sf(US_HI_cumi_MHW3, coords=c("lon","lat"))
-US_HI_cumi_MHW_ld3 <- metrics_df(only_US_HI_orig, radius3_HI, US_HI_MHW_geom3, 5) 
-US_HI_cumi_MHW_ld3 <- US_HI_cumi_MHW_ld3 %>% rename("cumi_N"= "input_N", "cumi_mean"= "input_mean", "cumi_var"= "input_var", "cumi_max"= "input_max", "cumi_min"= "input_min")
-US_HI_cumi_MHW_ld3 <- US_HI_cumi_MHW_ld3[!is.na(US_HI_cumi_MHW_ld3$cumi_mean),] 
-
-###AK:
-US_AK_MHW3 <- read_csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.AK3.V2.1.csv")
-US_AK_cumi_MHW3 <-aggregate(total_icum ~ lat_lon + lat + lon, US_AK_MHW3[between(US_AK_MHW3$year, 2012, 2016),], FUN = mean) 
-US_AK_MHW_geom3 = st_as_sf(US_AK_cumi_MHW3, coords=c("lon","lat"))
-US_AK_cumi_MHW_ld3 <- metrics_df(only_US_AK_orig, radius3_AK, US_AK_MHW_geom3, 5) 
-US_AK_cumi_MHW_ld3 <- US_AK_cumi_MHW_ld3 %>% rename("cumi_N"= "input_N", "cumi_mean"= "input_mean", "cumi_var"= "input_var", "cumi_max"= "input_max", "cumi_min"= "input_min")
-US_AK_cumi_MHW_ld3 <- US_AK_cumi_MHW_ld3[!is.na(US_AK_cumi_MHW_ld3$cumi_mean),] 
-
-US_total_cumi_MHW_ld3 <- rbind(US_main_cumi_MHW_ld3, US_AK_cumi_MHW_ld3, US_HI_cumi_MHW_ld3) 
-
-###Australia:
-Australia_MHW3 <- read_csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.Aus3.V2.1.csv")
-Australia_cumi_MHW3 <-aggregate(total_icum ~ lat_lon + lat + lon, Australia_MHW3[between(Australia_MHW3$year, 2012, 2016),], FUN = mean)
-Australia_MHW_geom3 = st_as_sf(Australia_cumi_MHW3, coords=c("lon","lat"))
-Australia_cumi_MHW_ld3 <- metrics_df(only_Aus_cs_orig, radius3_Aus, Australia_MHW_geom3, 11)
-Australia_cumi_MHW_ld3 <- Australia_cumi_MHW_ld3 %>% rename("cumi_N"= "input_N", "cumi_mean"= "input_mean", "cumi_var"= "input_var", "cumi_max"= "input_max", "cumi_min"= "input_min", "LGA"= "LGA_NAME16")
-Australia_cumi_MHW_ld3 <- Australia_cumi_MHW_ld3[!is.na(Australia_cumi_MHW_ld3$cumi_mean),]
-
-###Part 2: Filter for communities based off indicator datasets 
-###US:
-Indicator_data_final <- read.csv(file= "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.indicator.data.final.csv")
-US_total_cumi_MHW_ld3$Community.Name <- paste(US_total_cumi_MHW_ld3$Community.Name, US_total_cumi_MHW_ld3$State, sep = ", ")
-US_coastal_communities_indicator <- Indicator_data_final$Community.Name 
-US_total_cumi_MHW_ld_final3 <- US_total_cumi_MHW_ld3 %>% filter(Community.Name %in% US_coastal_communities_indicator) %>% arrange(Community.Name)
-
-###Australia: 
-Aus_indicators <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus.indicator.data.final.csv") 
-Aus_LGA_indicator <- Aus_indicators$LGA
-Australia_cumi_MHW_ld_final3 <- Australia_cumi_MHW_ld3 %>% filter(LGA %in% Aus_LGA_indicator)
-```
-
-##Wilcoxon rank sum test
-```{r}
-###Part 1: Prepare datasets, test for normality
-###US:
-US_total_cumi_MHW_ld3_final <- US_total_cumi_MHW_ld_final3  %>% select(Community.Name, cumi_mean) %>% rename(cumi_mean3 = "cumi_mean")
-US_radius1_3_ld <- US_cumi1 %>% left_join(US_total_cumi_MHW_ld3_final, by= "Community.Name")
-shapiro.test(US_radius1_3_ld$cumi_mean)
-shapiro.test(US_radius1_3_ld$cumi_mean3) ####Data isn't normally distributed 
-boxplot(US_radius1_3_ld$cumi_mean, US_radius1_3_ld$cumi_mean3) 
-
-###Australia:
-Australia_cumi_MHW_ld3_final <- Australia_cumi_MHW_ld_final3 %>% select(LGA, cumi_mean) %>% rename(cumi_mean3 = "cumi_mean")
-Aus_radius1_3_ld <- Aus_cumi1 %>% left_join(Australia_cumi_MHW_ld3_final, by= "LGA")
-shapiro.test(Aus_radius1_3_ld$cumi_mean)
-shapiro.test(Aus_radius1_3_ld$cumi_mean3) ####Data isn't normally distributed
-boxplot(Aus_radius1_3_ld$cumi_mean, Aus_radius1_3_ld$cumi_mean3)
-
-###Part 2: Wilcoxon signed rank test on paired samples: both datasets are significantly different with a radius= 3 
-wilcox.test(Aus_radius1_3_ld$cumi_mean, Aus_radius1_3_ld$cumi_mean3, paired = TRUE)
-wilcox.test(US_radius1_3_ld$cumi_mean, US_radius1_3_ld$cumi_mean3, paired = TRUE)
-```
-
-##Graphs for cumulative intensity of MHWs for poster sessin for US and Australia
-```{r}
-###Part 1: Load in MHW data from US.Aus.GetOISSTradius1.Rmd: these datasets have detected MHW events at lon/latitude points within a 111 km radius of US and Australia
-US_total_MHW_raw <- rbind(US_main_MHW, US_HI_MHW, US_AK_MHW)
-US_cumi <- US_total_MHW_raw %>% group_by(year) %>% filter(!count %in% 0) %>% mutate(avg_cumi = mean(intensity_cumulative)) %>% select(year, avg_cumi) ####Take the average cumulative intensity of marine heatwaves each year
-US_cumi <- US_cumi[!duplicated(US_cumi$year),] ####Long dataset as each year has same # for avg_cumi so remove duplicates
-Aus_cumi <- Australia_MHW %>% group_by(year) %>% filter(!count %in% 0) %>% mutate(avg_cumi = mean(intensity_cumulative)) %>% select(year, avg_cumi) 
-Aus_cumi <- Aus_cumi[!duplicated(Aus_cumi$year),]
-
-standard_theme2 <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black", size=1)) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 18), legend.text = element_text(size= 16), axis.text=element_text(size=16), axis.title=element_text(size=18), plot.title= element_text(size=20,vjust=1.5, hjust= 0.5))
-
-###Part 2: Graph Australia and US data together 
-ggplot() + geom_line(data= US_cumi, aes(x= year, y= avg_cumi, col= "U.S.")) + geom_point(data= US_cumi, aes(x= year, y= avg_cumi, col= "U.S.")) + geom_line(data= Aus_cumi, aes(x= year, y= avg_cumi, col= "Australia")) + geom_point(data= Aus_cumi, aes(x= year, y=avg_cumi, col= "Australia")) + xlab("Year") + ylab("Average cumulative intensity (°C days)") + standard_theme2 + theme(legend.position= c(0.20, 0.75)) + labs(col= "Country") + ggsave("/Users/sallydowd/Desktop/cumi_US_Aus.jpeg", width= 7, height= 5, dpi= 600)
-
-###Part 3: Make dataset for frequency of MHWs
-US_total_MHW_raw <- rbind(US_main_MHW, US_HI_MHW, US_AK_MHW)
-US_freq <- US_total_MHW_raw %>% group_by(year) %>% filter(!count %in% 0) %>% mutate(avg_freq = mean(count)) %>% select(year, avg_freq) ####Take the average cumulative intensity of marine heatwaves each year
-US_freq <- US_freq[!duplicated(US_freq$year),] ####Long dataset as each year has same # for avg_cumi so remove duplicates
-Aus_freq <- Australia_MHW %>% group_by(year) %>% filter(!count %in% 0) %>% mutate(avg_freq = mean(count)) %>% select(year, avg_freq) 
-Aus_freq <- Aus_freq[!duplicated(Aus_freq$year),]
-
-ggplot() + geom_line(data= US_freq, aes(x= year, y= avg_freq, col= "U.S.")) + geom_point(data= US_freq, aes(x= year, y= avg_freq, col= "U.S.")) + geom_line(data= Aus_freq, aes(x= year, y= avg_freq, col= "Australia")) + geom_point(data= Aus_freq, aes(x= year, y=avg_freq, col= "Australia")) + xlab("Year") + ylab("Average frequency of MHWs") + standard_theme2 + theme(legend.position= c(0.20, 0.75)) + labs(col= "Country") + ggsave("/Users/sallydowd/Desktop/freq_US_Aus.jpeg", width= 7, height= 5, dpi= 600)
-```
-
-##Exploration of SST data
-```{r}
-US_total_cumi_MHW_ld_final <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.total.cumi.2016.final.csv")
-Australia_cumi_MHW_ld_final <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Australia.cumi.2016.final.csv") 
-US_top15 <- US_total_cumi_MHW_ld_final %>% top_n(15, cumi_mean)
-Aus_top <- Australia_cumi_MHW_ld_final %>% top_n(15, cumi_mean)
-
-US_main_SST <- readRDS("/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/Raw_SST/US_main_data_SST6.Rda") 
-US_main_SST_final <- overlap_df(US_main_SST, radius1_US_main)
-final_coords <- US_main_SST_final[!duplicated(US_main_SST_final$lat_lon),] 
-final_coords <- final_coords %>% rename("Longitude"= "lon", "Latitude"= "lat")
-final_coords_map <- us_map_df(final_coords)
-final_coords_map_sf = st_as_sf(final_coords_map, coords= c("lon.1", "lat.1"))
-US_top <- us_map_df(US_total_cumi_MHW_ld_final %>% filter(cumi_mean >= 400))
-plot_usmap() + geom_point(data= US_top, aes(x= lon.1, y= lat.1), col= "red") + geom_point(data= final_coords_map, aes(x= lon.1, y= lat.1), col= "blue") + geom_polygon(data=waterway_df, aes(x= lon.1, y= lat.1, group = group))
-
-
-waterway <- readOGR(dsn = "/Users/sallydowd/Documents/Nye.lab/Coastal.vulnerability/US.data/Shapefiles/va_md_rivers", layer = "va_md_rivers")
-waterway_df <- fortify(waterway) %>% rename("Longitude"= "long", "Latitude"= "lat")
-waterway_df <- us_map_df(waterway_df)
 ```

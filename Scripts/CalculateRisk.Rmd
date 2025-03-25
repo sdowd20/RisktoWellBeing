@@ -6,7 +6,7 @@ date: "2024-06-12"
 
 ###Load in all packages, functions, and datsets needed for this code to run
 ```{r}
-source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/ToLoad.R")
 
 #Load original indicator data from Lisa and modify, Indicator data is only for exposure for the U.S. 
 Indicator_data_edt <- read_excel("~/Library/CloudStorage/GoogleDrive-sallycdowd@gmail.com/My Drive/Nye.lab/Coastal.vulnerability/US.data/Indicator.data.xlsx", col_types= "text", sheet= 8) %>% select(GEO_NAME, ComEng, ComRel) %>% rename("Community.Name"= "GEO_NAME")

@@ -3,12 +3,14 @@ title: "US.Aus.GetOISST.v2.1"
 output: html_document
 ---
 
+This code downloads the NOAA 1/4° Daily Optimum Interpolation Sea Surface Temperature (DOISST) dataset and calculates marine heatwaves metrics for Australia and the USA.
+
 #Load in all packages, functions, and datsets needed for this code to run
 ```{r}
-source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/ToLoad.R")
 ```
 
-#MAINLAND US
+#Mainland USA
 ##Get dataset with raw SST 
 ```{r}
 ###Part 1: Get OISST data from NOAA website for US and place it in folder 
@@ -61,7 +63,7 @@ write.csv(MHW_block_main, "/Users/sallydowd/Documents/GitHub/Nye-research-techni
 write.csv(MHW_block_main3, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.main3.V2.1.csv"); beep(sound= 8)
 ```
 
-#ALASKA
+#Alaska USA
 ##Get dataset with raw SST 
 ```{r}
 ###Part 1: Get OISST data from NOAA website for AK and place it in folder 
@@ -107,7 +109,7 @@ write.csv(MHW_block_AK, "/Users/sallydowd/Documents/GitHub/Nye-research-technici
 write.csv(MHW_block_AK3, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.AK3.V2.1.csv"); beep(sound=8)
 ```
 
-#HAWAII
+#Hawaii USA
 ##Get dataset with raw SST 
 ```{r}
 ###Part 1: Get OISST data from NOAA website for US and place it in folder 
@@ -152,7 +154,7 @@ write.csv(MHW_block_HI, "/Users/sallydowd/Documents/GitHub/Nye-research-technici
 write.csv(MHW_block_HI3, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.HI3.V2.1.csv")
 ```
 
-#AUSTRALIA
+#Australia 
 ##Get dataset with raw SST 
 ```{r}
 ###Part 1: Get OISST data from NOAA website for Australia and place it in folder 

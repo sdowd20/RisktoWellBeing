@@ -5,7 +5,7 @@
 packages <- c("ggpubr", "rnaturalearth","corrplot", "ncdf4", "rerddap", "heatwaveR", "dplyr", "readr", "readxl", "sf", "sp", "ggridges", "ggplot2", "viridis", "ggpubr", "tidyr", "forcats",  "mapproj", "factoextra", "EFAtools", "psych", "reshape2", "devtools", "FactoMineR", "usmap", "fmsb")
 invisible(lapply(packages, library, character.only= TRUE))
 
-#1) US.Aus.GetOISST.v2.1.Rmd 
+#1) Functions/data for GetOISST: 
 
 ##Functions: 
 ###Function 1: take nc file and put into df 
@@ -110,7 +110,7 @@ radius1_Aus <- st_buffer(only_Aus_sf, dist = 1)
 radius3_Aus <- st_buffer(only_Aus_sf, dist = 3)
 
 
-#2) US.AUS.MHWradius1.v2.1.Rmd 
+#2) CalculateMHW.Metrics.Rmd
 
 ##Functions: 
 ###Function 1: Find intersection b/w MHW metrics and communities 
@@ -132,6 +132,7 @@ metrics_df <- function(df1, df2, df3, number){
   df1 <- df1[order(df1$input_mean, decreasing = TRUE) ,]
   return(df1)
 }
+
 ###Function 2: Plots with coordinates, communities, and event metric for MHW or MCS
 graph1 <- function(dataset1, dataset2, metric){
   ggplot() + geom_sf(data= dataset1, cex= 0.7) + geom_point(data= dataset2, aes(x=lon, y=lat, colour= metric)) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))   
@@ -197,15 +198,10 @@ US_map_combo_cat <- function(dataset1, metric, colour2){
   plot_usmap() + geom_point(data= dataset1, aes(x = lon.1, y = lat.1, colour= as.factor(metric)), size=2 ) + theme(panel.background = element_rect(fill= "gray"), axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank()) + theme(legend.title= element_text(size = 18), legend.text = element_text(size= 16)) + labs(colour= colour2) + theme(panel.border = element_rect(colour = "black", fill=NA, size=1), legend.position= "bottom") + scale_color_manual(values= cols)
 }
 
-#US_map_combo_cont <- function(dataset1, metric, colour2){
-  #plot_usmap() + geom_point(data= dataset1, aes(x = lon.1, y = lat.1, colour= metric), size=2 ) + theme(panel.background = element_rect(fill= "gray"), axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank()) + theme(legend.title= element_text(size = 18), legend.text = element_text(size= 16)) + labs(colour= colour2) + scale_color_viridis(option= "G")
-#}
-                                                                                          
 ###Create a standard ggplot theme 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black", size=1)) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12), axis.title=element_text(size=14)) 
 
-
-#3) Multivariate.stats.v2.1.Rmd
+#3) PCA.Rmd
 
 ##Functions: 
 ###Function 1: use principal function to calculate PCA, this is code from NOAA- will need to cite 
@@ -269,7 +265,7 @@ scores_PCA <- function(df1, PCA_df, index, number, community_df) {
 } ####Important for ease of mind: HAVE confirmed that this approach works with labor force and housing characteristics- does flip the #s 
 
 
-#4) Risk.calcs.v2.1.Rmd
+#4) CalculateRisk.Rmd 
 
 ###Datasets to load: 
 US_scores <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.PC1.scores.csv")
@@ -343,30 +339,7 @@ risk_calc <- function(dataset1, vuln_range, MHW_metric, exposure, MHW_loc, exp_l
 } ####ATTENTION: This is a new function to you but you checked over it multiple times. You did arsenal::comparedf b/w this output and ouptut of larger dplyr dataset that did the same thing as this function but less efficiently
 ####mapply: applies a function to the first elements of each argument, the 2nd elements, the third elements (goes row by row so community by community), used template on this website: https://www.statology.org/r-mapply/
 
-###EXTRA RISK.CALCS CODE
-
-###STANDARDIZATION
-##Part 2: Z-score standardization, doesn't change the PCA columns as these values have already been standardized, haven't updated this with new exposure method 
-#z_score_stand <- function(metric){
-#(metric - mean(metric))/(sd(metric))
-#}
-#z_score_US <- US_scores_MHW[1] %>% cbind(lapply(US_scores_MHW[,6:14], z_score_stand))
-#z_score_Aus <- Aus_scores_MHW[1] %>% cbind(lapply(Aus_scores_MHW[,5:12], z_score_stand))
-
-# ##See contribution of each vulnerability index to total score
-# ##Trying to make a vulnerability pie chart
-# vuln_cont <- function(df1, range, loc){
-#   newdf <- df1[,c(1,18)]
-#   for(i in colnames(risk_total_US_fishing[,range])){
-#     col <- (risk_total_US_fishing[,i])/(risk_total_US_fishing[,loc])
-#     colnames(col) <- paste0(i, "_prop")
-#     newdf <- newdf %>% cbind(col)
-#   }
-#   return(newdf)
-# }
-# vuln_cont(risk_total_US_fishing, 13:17, 18)
-
-#5) Risk.methods.calc.Rmd
+#5) CalculateRisk.Rmd 
 
 ###Function 1: Calculate categorical score for PC1 scores
 get_categorical_score <- function(x) {
@@ -398,13 +371,7 @@ risk_quantiles <- function(df1, plot_title){
   df2_cat <- df2 %>% mutate("Category"= ifelse(Quartile== 1, "Low", ifelse(Quartile==2, "Medium", ifelse(Quartile==3, "Medium-high", ifelse(Quartile==4, "High", NA)))))
   return(df2_cat)
   }
-   ####c) Visualize
- # df2_cat_transf <- us_map_df(df2_cat) %>% arrange(risk_cumi)
- # df2_cat_transf$Category <- factor(df2_cat_transf$Category, levels= c("Low", "Medium", "Medium-high", "High"))
-  #cat_plot <- US_map_combo_cat(df2_cat_transf, df2_cat_transf$Category, "Risk") + theme(legend.position= "bottom") +
-  #  scale_colour_manual(values= c("#0072B2", "#66CC99", "#F0E442", "#D55E00"))
- # print(cat_plot)
-
+ 
 ###Function 4: US, Risk categorization method 2: Visualization for SD method of categorization for U.S. 
 risk_sd_deciles_vis <- function(df1){
   df2 <- us_map_df(df1) %>% arrange(risk_cumi)
@@ -425,13 +392,6 @@ risk_quantiles_Aus <- function(df1, plot_title){
   print(quartile_plot)
   df2_cat <- df2 %>% mutate("Category"= ifelse(Quartile== 1, "Low", ifelse(Quartile==2, "Medium", ifelse(Quartile==3, "Medium-high", ifelse(Quartile==4, "High", NA)))))
 }
-   ####c) Visualize
- # df2_cat_edt <- df2_cat %>% arrange(risk_cumi)
- # df2_cat_edt$Category <- factor(df2_cat_edt$Category, levels= c("Low", "Medium", "Medium-high", "High"))
-#  Aus_graph<- graph2(df2_cat_edt, Aus_shp, df2_cat_edt$Category) + scale_colour_manual(values= c("#0072B2", "#66CC99", "#F0E442", "#D55E00")) + theme(legend.position= "bottom") + labs(color = "Category")
-#  print(Aus_graph)
- # return(df2_cat)
-
 
 ###Function 6: Calculate quantiles and assign categories 
 quantiles_risk_components <- function(df1, column, plot_title){

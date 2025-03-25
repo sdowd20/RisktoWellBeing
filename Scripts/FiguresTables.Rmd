@@ -7,7 +7,7 @@ date: "2024-06-18"
 This code reproduces the figures in the main text and the appendix of the manuscript. All tables were created in an editable format, but we show the calculations for Table 1-4 in the main text are shown here. 
 
 ```{r}
-source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/ToLoad.R")
 
 US_risk_results <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US_risk_results_final.csv")
 Aus_risk_results <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus_risk_results_final.csv")

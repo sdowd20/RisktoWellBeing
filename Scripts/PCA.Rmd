@@ -4,9 +4,11 @@ output: html_document
 date: "2024-06-19"
 ---
 
+This code performs the Principal Component Analysis to create the social vulnerability indices. 
+
 #Load in all packages, functions, and datsets needed for this code to run
 ```{r}
-source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/Vuln.funcs.R")
+source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/ToLoad.R")
 ```
 
 #PCA
@@ -40,7 +42,7 @@ hc_PCA_prin <- principal_PCA(housing_charcs)
 hc_scores <- scores_PCA(housing_charcs, hc_PCA_prin, "housing_charcs", 3255, Community_ID) %>% select(Community.Name, PC1_scores) %>% rename("PC1_scores_hc" ="PC1_scores")
 
 US_scores <- cbind(pd_scores, pc_scores[,2], pov_scores[,2], lf_scores[,2], hc_scores[,2], Indicator_data[,c(24,25)])
-# write.csv(US_scores, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.PC1.scores.csv") #updated on 06/19/24
+write.csv(US_scores, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.PC1.scores.csv") 
 ```
 
 ##Australia
@@ -71,6 +73,5 @@ pd_scores_Aus <- scores_PCA(pd_Aus, pd_prin_PCA_Aus, "pers_disruption", 209, LGA
   hc_scores_Aus2 <- scores_PCA(hc_Aus2, hc_prin_PCA_Aus2, "housing_charcs", 209, LGA_ID) %>% select(LGA, PC1_scores) %>% rename("PC1_scores_hc" ="PC1_scores")
   
 Aus_scores <- cbind(pd_scores_Aus, pc_scores_Aus2[,2], lf_scores_Aus[,2], hc_scores_Aus2[,2], Aus_indicators[,c(19, 21)])
-# write.csv(Aus_scores, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus.PC1.scores.csv") #updated on 06/19/24
+write.csv(Aus_scores, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/Aus.PC1.scores.csv") 
 ```
-
