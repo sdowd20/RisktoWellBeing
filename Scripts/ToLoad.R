@@ -136,8 +136,7 @@ graph1 <- function(dataset1, dataset2, metric){
 ###Function 3: Plots with communities, radius, and event metric for MHW or MCS
 US_shp <- st_read(dsn = "/Users/sallydowd/Library/CloudStorage/GoogleDrive-sallycdowd@gmail.com/My Drive/Nye.lab/Coastal.vulnerability/US.data/Shapefiles/tl_2021_us_state", layer = "tl_2021_us_state")
 US_shp_df <- fortify(US_shp) #Need to get US shapefile to use in graph 2 function
-Aus_shp <- st_read(dsn = "/Users/sallydowd/Library/CloudStorage/GoogleDrive-sallycdowd@gmail.com/My Drive/Nye.lab/Coastal.vulnerability/Aus.data/ShapeFiles/Australia", layer = "LGA_2016_AUST")
-#Aus_shp <- st_read(dsn="/Users/sallydowd/Google Drive/My Drive/Nye.lab/Coastal.vulnerability/Aus.data/ShapeFiles/Australia", layer = "aust_cd66states")
+Aus_shp <- st_read(dsn = "/Users/sallydowd/Library/CloudStorage/GoogleDrive-sallycdowd@gmail.com/My Drive/Nye.lab/Coastal.vulnerability/Aus.data/ShapeFiles/Australia", layer = "LGA_2016_AUST") #this layer is the Local Government Areas ASGS Ed 2016 Digital Boundaries in ESRI Shapefile Format and can be downloaded from: https://www.abs.gov.au/AUSSTATS/abs@.nsf/DetailsPage/1270.0.55.003July%202016?OpenDocument#Data
 Aus_shp_df <- fortify(Aus_shp)
 graph2 <- function(dataset1, shapefile, metric){
 ggplot() + geom_polygon(data = shapefile, aes(x=long, y = lat, group = group), fill= "ghostwhite") +  geom_path(data = shapefile, aes(x = long, y = lat, group = group), 
