@@ -3,7 +3,7 @@ title: "US.Aus.GetOISST.v2.1"
 output: html_document
 ---
 
-This code downloads the NOAA 1/4° Daily Optimum Interpolation Sea Surface Temperature (DOISST) dataset and calculates marine heatwaves metrics for Australia and the USA.
+This code downloads the NOAA 1/4° Daily Optimum Interpolation Sea Surface Temperature (DOISST) dataset and calculates marine heatwaves metrics for Australia and the USA. Through this script, we modified code from Kurt C. Heim. 
 
 #Load in all packages, functions, and datsets needed for this code to run
 ```{r}

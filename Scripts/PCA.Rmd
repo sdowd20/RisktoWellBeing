@@ -4,7 +4,7 @@ output: html_document
 date: "2024-06-19"
 ---
 
-This code performs the Principal Component Analysis to create the social vulnerability indices. 
+This code performs the Principal Component Analysis to create the social vulnerability indices following the method in Jepson & Colburn, (2013). 
 
 #Load in all packages, functions, and datsets needed for this code to run
 ```{r}
@@ -47,10 +47,8 @@ write.csv(US_scores, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians
 
 ##Australia
 ```{r}
-#Personal disruption PCA: correlation matrix
-#Try 1: using all indicators in social indicators sheet 
 set.seed(23)
-
+#Personal disruption PCA: correlation matrix
 pd_Aus <- Aus_indicators %>% select(PCTUNEMPLD, PCTNODIPLOMA, PCTPOV50, PCTFEMALESEPARATED)
 pd_prin_PCA_Aus <- principal_PCA(pd_Aus) 
 pd_scores_Aus <- scores_PCA(pd_Aus, pd_prin_PCA_Aus, "pers_disruption", 209, LGA_ID) %>% select(LGA, PC1_scores) %>% rename("PC1_scores_pd" ="PC1_scores")

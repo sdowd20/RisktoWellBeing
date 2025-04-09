@@ -4,7 +4,9 @@ output: html_document
 date: "2024-06-12"
 ---
 
-###Load in all packages, functions, and datsets needed for this code to run
+This code calculates risk with hazard, exposure, and vulnerability. 
+
+#Load in all packages, functions, and datsets needed for this code to run
 ```{r}
 source("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Code/ToLoad.R")
 
@@ -19,9 +21,8 @@ Indicator_data_edt <- Indicator_data_edt[complete.cases(Indicator_data_edt),] #o
 Indicator_data_edt[, 2:3] <- apply(Indicator_data_edt[ , 2:3], 2, function(x) as.numeric(as.character(x))) 
 ```
 
-###Categorize hazard, exposure, and vulnerability pre-risk calculation: method 2 on NOAA PP 
-
-#### U.S. 
+#Categorize hazard, exposure, and vulnerability pre-risk calculation 
+## U.S. 
 ```{r}
 #Updated on 10/09/24
 #Hazard: MHW cumulative intensity categorized using quantiles
@@ -39,7 +40,7 @@ US_categorized3 <- US_scores_MHW %>% left_join(exp_method3, by= "Community.Name"
 ```
 
 
-#### Australia
+## Australia
 ```{r}
 #Hazard: MHW cumulative intensity categorized using quantiles
 Aus_scores_MHW$cumi_quartile <- cut(x= Aus_scores_MHW$cumi_mean, breaks= quantile(Aus_scores_MHW$cumi_mean, probs= seq(0,1,0.25)), include.lowest=TRUE,labels=FALSE)
@@ -57,7 +58,7 @@ Aus_scores_MHW <- Aus_scores_MHW %>% mutate(across(avg_cat_vuln, get_categorical
 Aus_categorized3 <- Aus_scores_MHW %>% left_join(quantiles_Aus_exp, by= "LGA")
 ```
 
-###Calculate risk 
+#Calculate risk 
 ```{r}
 US_risk_precat <- risk_precat(US_categorized3, Community.Name, avg_cat_exp)
 US_risk_precat <- US_risk_precat %>% drop_na()
@@ -69,8 +70,7 @@ ggplot(Aus_risk_precat, aes(x= risk_cumi)) + geom_histogram(bins=20) + xlab("Ris
 ggsave("/users/sallydowd/desktop/risk.Aus.png", width= 7, height= 5)
 ```
 
-###Categorize risk
-
+#Categorize risk
 ```{r}
 #US 
 ##Method 1: quantiles 
@@ -89,7 +89,7 @@ quantile(Aus_risk_precat$risk_cumi, probs = seq(0.20, 1.0, by = .20))
 Aus_risk_precat_deciles <- Aus_risk_precat %>% mutate("Category"= ifelse(risk_cumi <= 3.5, "Low", ifelse(risk_cumi >  3.5 & risk_cumi <= 21.6, "Moderate", ifelse(risk_cumi > 21.6, "High", NA))))
 ```
 
-### Results: organize 
+#Organize results 
 ```{r}
 ## add in exposure raw, have all raw then all categorized
 #US

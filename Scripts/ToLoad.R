@@ -83,7 +83,6 @@ only_US_main_sf = st_as_sf(only_US_main_orig,coords=c("Longitude","Latitude")) #
 ####Plot and draw radius/buffer around communities
 plot(st_geometry(only_US_main_sf), axes = TRUE)
 radius1_US_main <- st_buffer(only_US_main_sf, dist = 1) ###111 km radius around each community   
-radius3_US_main <- st_buffer(only_US_main_sf, dist = 3) ####333 km radius around each community
 
 ###AK:
 ###Loading data that has AK communities that are not connected with SST yet. Data accessed (https://www.st.nmfs.noaa.gov/data-and-tools/social-indicators/) for AK communities for year 2016 to get community names and their associated lat/lon 
@@ -91,7 +90,6 @@ US_AK_communities <- read_csv("~/Documents/GitHub/Nye-research-technicians/MHW.M
 only_US_AK_orig <- US_AK_communities %>% select("Community Name", State, Region, Latitude, Longitude) %>% rename(Community.Name= "Community Name") 
 only_US_AK_sf = st_as_sf(only_US_AK_orig,coords=c("Longitude","Latitude")) ####Converts to sf object, coords states name of columns holding coordinates
 radius1_AK <- st_buffer(only_US_AK_sf, dist = 1)
-radius3_AK <- st_buffer(only_US_AK_sf, dist = 3) 
 
 ###HI: 
 ###Loading data that has HI communities that are not connected with SST yet. Data accessed (https://www.st.nmfs.noaa.gov/data-and-tools/social-indicators/) for HI communities for year 2016 to get community names and their associated lat/lon 
@@ -99,7 +97,6 @@ US_HI_communities <- read_csv("~/Documents/GitHub/Nye-research-technicians/MHW.M
 only_US_HI_orig <- US_HI_communities %>% select("Community Name", State, Region, Latitude, Longitude) %>% rename(Community.Name= "Community Name")
 only_US_HI_sf = st_as_sf(only_US_HI_orig,coords=c("Longitude","Latitude")) 
 radius1_HI <- st_buffer(only_US_HI_sf, dist = 1) 
-radius3_HI <- st_buffer(only_US_HI_sf, dist = 3)
 
 ###Australia:
 ###Loading data that has local government areas that are not connected with SST yet. Shapefiles accessed through Australian Bureau of Statistics (https://www.abs.gov.au/AUSSTATS/abs@.nsf/DetailsPage/1270.0.55.003July%202015?OpenDocument#Data) for 2016 and manipulated within QGIS version 3.20.0.
@@ -107,8 +104,6 @@ only_Aus_cs_orig <- read_csv("/Users/sallydowd/Documents/GitHub/Nye-research-tec
 only_Aus_cs_orig <- only_Aus_cs_orig %>% select(-c(vertex_index, vertex_part, vertex_part_index, fid, HubName, HubDist, angle)) %>% rename("Longitude"= "xcoord", "Latitude"= "ycoord")
 only_Aus_sf = st_as_sf(only_Aus_cs_orig,coords=c("Longitude","Latitude")) 
 radius1_Aus <- st_buffer(only_Aus_sf, dist = 1) 
-radius3_Aus <- st_buffer(only_Aus_sf, dist = 3)
-
 
 #2) CalculateMHW.Metrics.Rmd
 
@@ -145,9 +140,8 @@ Aus_shp <- st_read(dsn = "/Users/sallydowd/Library/CloudStorage/GoogleDrive-sall
 #Aus_shp <- st_read(dsn="/Users/sallydowd/Google Drive/My Drive/Nye.lab/Coastal.vulnerability/Aus.data/ShapeFiles/Australia", layer = "aust_cd66states")
 Aus_shp_df <- fortify(Aus_shp)
 graph2 <- function(dataset1, shapefile, metric){
-  ggplot() + geom_polygon(data = shapefile, aes(x=long, y = lat, group = group), fill= "ghostwhite") +  geom_path(data = shapefile, aes(x = long, y = lat, group = group), 
-                                                                                                                  color = "black", size = 0.2) +
-    coord_equal() +geom_polygon() + coord_equal() + geom_point(data= dataset1, aes(x= Longitude, y= Latitude, colour= metric), size=2) + standard_theme + xlab("Longitude") + ylab("Latitude") + theme(panel.background = element_rect(fill= "gray")) + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x= element_blank(), axis.title.y= element_blank())
+ggplot() + geom_polygon(data = shapefile, aes(x=long, y = lat, group = group), fill= "ghostwhite") +  geom_path(data = shapefile, aes(x = long, y = lat, group = group), 
+color = "black", size = 0.2) + coord_equal() +geom_polygon() + coord_equal() + geom_point(data= dataset1, aes(x= Longitude, y= Latitude, colour= metric), size=2) + standard_theme + xlab("Longitude") + ylab("Latitude") + theme(panel.background = element_rect(fill= "gray")) + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.title.x= element_blank(), axis.title.y= element_blank())
 }
 
 aus_graph <- function(dataset1, metric){
@@ -159,24 +153,7 @@ graph2.5 <- function(dataset1, dataset2, metric){
   ggplot() + geom_point(data= dataset1, aes(x= Longitude, y= Latitude, colour= metric)) + geom_point(data= dataset2, aes(x=lon, y=lat), shape=".") + standard_theme + xlab("Longitude") + ylab("Latitude")
 }
 
-###Function 4: Plot metric distributions based off State 
-metric_dist <- function(dataset, metric){
-  ggplot(dataset, aes(x = metric, y = State, fill = stat(x))) + 
-    geom_density_ridges_gradient(scale = 0.9, rel_min_height = 0.01, quantile_lines= TRUE, quantiles= 2) + ylab("State") +
-    standard_theme + 
-    theme(legend.position = "none") 
-}
-
-###Function 5: Boxplot to look at region-wide trens in MHWs
-region_trends_cumi <- function(df, region, width){
-  df %>% filter(df$Region== region) %>% mutate(bin=cut_width(Latitude, width=width, boundary=0)) %>% ggplot(aes(x= bin, y= cumi_mean)) + geom_boxplot() + xlab("Latitude") + ylab("Average cumulative intensity") + standard_theme 
-}
-
-region_trends_dur <- function(df, region, width){
-  df %>% filter(df$Region== region) %>% mutate(bin=cut_width(Latitude, width=width, boundary=0)) %>% ggplot(aes(x= bin, y= dur_mean)) + geom_boxplot() + xlab("Latitude") + ylab("Average cumulative intensity") + standard_theme 
-}
-
-###Function 6: Transform lat and lon data so US map contains mainland, AK, and HI 
+###Function 4: Transform lat and lon data so US map contains mainland, AK, and HI 
 us_map_df <- function(dataset1){
   US_metric_mod <- dataset1 %>% rename("lon"= "Longitude", "lat"= "Latitude") %>% select(lat, everything()) %>% select(lon, everything()) #move latitude and longitude to the front of dataset 
   US_transformed <- usmap_transform(US_metric_mod) ####Discarded datum unknown error: I think this is ok and makes sense b/c dataset doesn't have a coordinate reference system (just have lat/lon  
@@ -237,37 +214,11 @@ scores_PCA <- function(df1, PCA_df, index, number, community_df) {
     df1$PC1_scores <- df1$PC1_scores* -1
   } else { df1$PC1_scores <- df1$PC1_scores* 1}
   scores <- as.data.frame(df1)
-  
-  ####Function to get categorical scores: OLD, Left variable is condition to test for and right variable is the value to return (variables on right hand side have to be same class) 
-  get_categorical_score <- function(x) {
-    cat_score <- case_when(x >= 1 ~ 4,
-                           x >= 0.5 ~ 3,
-                           x >= 0 ~ 2,
-                           x >=  -99999 ~ 1,
-                           TRUE ~ 0) 
-    return(cat_score) 
-  }
-  
-  ####Function to get categorical scores: NEW, 
-  get_cat_score_new <- function(x, col_sd) {
-    cat_score <- case_when(x >= 1*col_sd ~ 4,
-                           x >= 0.5*col_sd ~ 3,
-                           x >= 0*col_sd ~ 2,
-                           x >=  -99999*col_sd ~ 1,
-                           TRUE ~ 0) 
-    return(cat_score) 
-  }
-  
-  ####Get categorical score for numeric columns (PC1_scores here), across within mutate means you can specify multiple columns to apply function to  
-  scores_with_ranks <- scores %>% mutate(across(where(is.numeric), get_categorical_score, .names = "{col}_rank"), X= 1:number) 
-  scores_final <- community_df %>% left_join(scores_with_ranks, by= "X") %>% select(-X) ####Add in community names to PC1 scores and categorical scores df 
-  return(scores_final)
-} ####Important for ease of mind: HAVE confirmed that this approach works with labor force and housing characteristics- does flip the #s 
-
+}
 
 #4) CalculateRisk.Rmd 
 
-###Datasets to load: 
+##Datasets to load: 
 US_scores <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.PC1.scores.csv")
 US_total_cumi_MHW_ld_final <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.total.cumi.2016.final.V2.1.csv")
 US_total_dur_MHW_ld_final <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.total.dur.2016.final.V2.1.csv")
@@ -287,60 +238,7 @@ Aus_scores_MHW <- Australia_cumi_MHW_ld_final[,c(5,7,12:13,15)] %>% left_join(Au
 i<- c(5:12)
 Aus_scores_MHW[, i] <- apply(Aus_scores_MHW[ , i], 2, function(x) as.numeric(as.character(x))) 
 
-###Function 1: Min-max normalization 
-minmax_norm <- function(metric){
-  (metric- min(metric)) /(max(metric)-min(metric))
-}
-
-###Function 2: Calculate overall risk based off varying in puts for exposure for US and Australia 
-risk <- function(df, group, exposure, df2, range, group2){
-  df %>% group_by({{ group }}) %>% mutate(risk_cumi= cumi_mean*{{ exposure }}*sum_vuln_norm, risk_dur= dur_mean*{{ exposure }}*sum_vuln_norm) %>% left_join(df2[,range], by= group2)
-}
-####IMPORTANT: How to use group_by in a function! Can do the same thing with filter. Dplyr functions expect to see unquoted variable names so if you want your functions to work with dplyr functions, you have to pass it unquoted variable names. Using the special "embrace" operator {{}} that transports a data-masked argument (an argument that can refer to columns of a data frame) from one function to another. It's useful when passing an argument that has to be substituted in place before being evaluated in another context 
-
-###Function 3: Categorize risk into low, moderate, and high categories based on standard deviation 
-cat_risk <- function(df1){
-  sd <- sd(df1$risk_cumi)
-  df1 %>% mutate("Category"= ifelse(risk_cumi < 0.50*sd, "Low", ifelse(risk_cumi >= 0.50*sd & risk_cumi <= 0.999*sd, "Moderate", ifelse(risk_cumi >= sd, "High", NA))))
-} ####Ifelse(): checks the condition for every element of a vector, if x (e.g. "Low") is true it'll be returned, if x doesn't equal any condition listed it'll return NA
-
-###Function 4: Make bar plot, it's not finished- find middle points for median
-####a):
-bar_plot_df <- function(df, Category, category1, category2, category3, community){
-  top_bottom_df <- df %>% filter({{Category}}== category1) %>% arrange(Risk) %>% head(2) %>% rbind(df %>% filter({{Category}}== category2) %>% arrange(desc(Risk)) %>% head(2)) %>% rbind(df %>% filter({{Category}}== category3) %>% arrange(desc(Risk))  %>% head(2))
-  long_df <- top_bottom_df %>% pivot_longer(c(Hazard, Exposure, Vulnerability), names_to= "metric", values_to= "metric_value") %>% group_by({{ community }}) %>% arrange(desc(Risk))
-}
-
-####b): 
-bar_plot <- function(df, community, exposure){
-  ggplot(df, aes(x= community, y= metric_value, fill= metric)) + geom_col(width= 0.7, position= position_stack(reverse=TRUE))+ coord_flip() + standard_theme + labs(fill= "Risk component", y= "Normalized value", x= "Community") + scale_fill_manual(labels= c("Cumulative intensity", exposure, "Vulnerability"), values= c("#D55E00", "#56B4E9", "#F0E442")) 
-}
-
-###Function 5: Density plots
-density_plotCat1 <- function(df) {
-  ggplot(df, aes(x = Risk, fill = RiskCategoryM1)) + geom_density(adjust= 0.8) + scale_fill_manual(
-    name = "Category", values = c("Low" = "#0072B2", "Medium" = "#66CC99", "Medium-high" = "#F0E442", "High" = "#D55E00"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Density") + standard_theme + expand_limits(x= 0)
-}
-
-density_plotCat2 <- function(df) {
-  ggplot(df, aes(x = Risk, fill = RiskCategoryM2)) + geom_density(adjust= 0.8) + scale_fill_manual(
-    name = "Category", values = c("Low" = "#0072B2", "Medium" = "#66CC99", "High" = "#D55E00"), labels = c("Low", "Medium", "High")) + labs(x = "Risk", y = "Density") + standard_theme + expand_limits(x= 0)
-}
-
-###Function 3: Calculate risk with individual vulnerability index (ex: personal disruption) --> NOT CURRENTLY USED
-risk_calc <- function(dataset1, vuln_range, MHW_metric, exposure, MHW_loc, exp_loc){
-  newdf <- dataset1[1]
-  for(i in colnames(dataset1[,vuln_range])){
-    col <- as.data.frame(mapply(function(MHW_metric, exposure, vuln_metric) MHW_metric*exposure*vuln_metric, dataset1[,MHW_loc], dataset1[,exp_loc], dataset1[,i]))
-    colnames(col) <- paste0(i, "_risk")
-    newdf <- newdf %>% cbind(col)
-  }
-  return(newdf)
-} ####ATTENTION: This is a new function to you but you checked over it multiple times. You did arsenal::comparedf b/w this output and ouptut of larger dplyr dataset that did the same thing as this function but less efficiently
-####mapply: applies a function to the first elements of each argument, the 2nd elements, the third elements (goes row by row so community by community), used template on this website: https://www.statology.org/r-mapply/
-
-#5) CalculateRisk.Rmd 
-
+##Functions
 ###Function 1: Calculate categorical score for PC1 scores
 get_categorical_score <- function(x) {
   cat_score <- case_when(x >= 1 ~ 4,
@@ -351,7 +249,7 @@ get_categorical_score <- function(x) {
   return(cat_score) 
 }
 
-####Function 2: Calculate risk from categorized data 
+###Function 2: Calculate risk from categorized data 
 risk_precat <- function(df, group, exposure){
   newdf <- df %>% group_by({{ group }}) %>% mutate(risk_cumi= cumi_quartile*{{ exposure }}*avg_cat_vuln)
   plot <- ggplot(newdf, aes(x= risk_cumi)) + geom_histogram() + xlab("Risk") + ylab("Count") + standard_theme
@@ -372,18 +270,7 @@ risk_quantiles <- function(df1, plot_title){
   return(df2_cat)
   }
  
-###Function 4: US, Risk categorization method 2: Visualization for SD method of categorization for U.S. 
-risk_sd_deciles_vis <- function(df1){
-  df2 <- us_map_df(df1) %>% arrange(risk_cumi)
-  df2$Category <- factor(df2$Category, levels= c("Low","Moderate", "High"))
-  cat_plot <- US_map_combo_cat(df2, df2$Category, "Risk") + theme(legend.position= "bottom") +
-    scale_colour_manual(values= c("#0072B2", "#66CC99", "#D55E00")) 
-    print(cat_plot)
-    box_cat_plot <- df1 %>% ggplot(aes(x= factor(Category, level= c("Low", "Moderate", "High")), y= risk_cumi)) + geom_boxplot() + ylab("Risk") + xlab("Category") + standard_theme 
-    print(box_cat_plot)
-}
-
-###Function 5: Australia, Risk categorization method 1: calculate quantiles for Aus and assign to categories for overall risk
+###Function 4: Australia, Risk categorization method 1: calculate quantiles for Aus and assign to categories for overall risk
 risk_quantiles_Aus <- function(df1, plot_title){
   df2 <- df1 
   ####b) Calculate quantiles and assign categories 
@@ -393,32 +280,13 @@ risk_quantiles_Aus <- function(df1, plot_title){
   df2_cat <- df2 %>% mutate("Category"= ifelse(Quartile== 1, "Low", ifelse(Quartile==2, "Medium", ifelse(Quartile==3, "Medium-high", ifelse(Quartile==4, "High", NA)))))
 }
 
-###Function 6: Calculate quantiles and assign categories 
+###Function 5: Calculate quantiles and assign categories 
 quantiles_risk_components <- function(df1, column, plot_title){
   ####a) Calculate quantiles and assign categories 
   df1$Quartile <- cut(x= column, breaks= quantile(column), include.lowest=TRUE,labels=FALSE)
   quartile_plot <- df1 %>% ggplot(aes(x= as.factor(Quartile), y= column)) + geom_boxplot() +
     scale_x_discrete(labels=seq(1,4,1)) + labs(title= plot_title) + xlab("Quartile") + ylab("% employed in fishing") + standard_theme 
   print(quartile_plot)
-  df1_cat <- df1 %>% mutate("Category"= ifelse(Quartile== 1, "Low", ifelse(Quartile==2, "Medium",
-                                                                           ifelse(Quartile==3, "Medium-high", ifelse(Quartile==4, "High", NA)))))
+  df1_cat <- df1 %>% mutate("Category"= ifelse(Quartile== 1, "Low", ifelse(Quartile==2, "Medium", ifelse(Quartile==3, "Medium-high", ifelse(Quartile==4, "High", NA)))))
   return(df1_cat)
-}
-
-###Function 7: Australia, Risk categorization method 1: calculate quantiles for Aus and assign to categories for overall risk
-risk_sd_deciles_vis_Aus <- function(df1){
-  df2 <- df1 %>% arrange(risk_cumi)
-  df2$Category <- factor(df2$Category, levels= c("Low","Moderate", "High"))
-  Aus_graph<- graph2(df2, Aus_shp, df2$Category) +
-    scale_colour_manual(values= c("#0072B2", "#66CC99", "#D55E00")) + theme(legend.position= "bottom") + labs(color = "Category")
-  print(Aus_graph)
-  box_cat_plot <- df2 %>% ggplot(aes(x= factor(Category, level= c("Low", "Moderate", "High")), y= risk_cumi)) + geom_boxplot() + ylab("Risk") + xlab("Category") + standard_theme 
-  print(box_cat_plot)
-  return(df2)
-}
-
-####Function 8: Make bar plot to highlight categorized contribution of risk components 
-bar_plot_df4cat <- function(df, Category, category1, category2, category3, category4, community){
-  top_bottom_df <- df %>% filter({{Category}}== category1) %>% arrange(Risk) %>% head(2) %>% rbind(df %>% filter({{Category}}== category2) %>% arrange(desc(Risk))%>% head(2)) %>% rbind(df %>% filter({{Category}}== category3) %>% arrange(desc(Risk))%>% head(2)) %>% rbind(df %>% filter({{Category}}== category4) %>% arrange(desc(Risk))%>% head(2)) ###Need to find middle points for moderate category! 
-  long_df <- top_bottom_df %>% pivot_longer(c(Hazard, Exposure, Vulnerability), names_to= "metric", values_to= "metric_value") %>% group_by({{ community }}) %>% arrange(desc(Risk))
 }

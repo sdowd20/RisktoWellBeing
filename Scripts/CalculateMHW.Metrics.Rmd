@@ -3,7 +3,7 @@ title: "US.Aus.MHWradius1.v2.1"
 output: html_document
 ---
 
-This code links marine heatwave metrics to each coastal community. 
+This code links marine heatwave metrics to each coastal community. Through this script, we modified code from Kurt C. Heim. 
 
 #Load in all packages, functions, and datsets needed for this code to run
 ```{r}
