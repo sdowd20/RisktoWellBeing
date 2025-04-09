@@ -86,30 +86,21 @@ ggsave("/users/sallydowd/Desktop/p2_Aus.png", dpi= 500, width= 8, height= 5)
 
 #### Fig. 5
 ```{r}
-ggplot(US_transf_cat, aes(x= Risk, fill= RiskCategoryM1)) + geom_histogram(bins=30) + scale_fill_manual(
-    name = "Category", values = c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Count") + standard_theme + expand_limits(x= 0) + facet_wrap(~Region, ncol=5, scales= "free_y") + labs(tags= "A)")
-ggsave("/users/sallydowd/Desktop/risk.US.hist.png", width= 10, height= 3, dpi= 500)
-
-ggplot(Aus_transf_cat, aes(x= Risk, fill= RiskCategoryM1)) + geom_histogram(bins=20) + scale_fill_manual(
-    name = "Category", values = c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Count") + standard_theme + expand_limits(x= 0) + facet_wrap(~State, ncol=7, scales= "free_y") + labs(tags= "B)") + theme(legend.position= "none")
-ggsave("/users/sallydowd/Desktop/risk.aus.hist.png", width= 10, height= 3, dpi= 500)
-```
-
-#### Fig. 6
-```{r}
 US_risk_results_edt <- US_risk_results %>% mutate(Longitude= Longitude + 360) %>% mutate(avg_cat_exp = (ComEng + ComRel)/2, avg_cat_vuln= (PC1_scores_pd + PC1_scores_pc + PC1_scores_lf + PC1_scores_pov + PC1_scores_hc)/5) %>% dplyr::select(-Hazard, -Exposure, -Vulnerability) %>% rename("Hazard"= "cumi_mean", "Exposure"= "avg_cat_exp", "Vulnerability"= "avg_cat_vuln")
 colnames(US_risk_results_edt) 
 cor_data <- cor(US_risk_results_edt[,c(5:6,7,18,19,15)], method= "kendall")
 cor_test <- cor.mtest(US_risk_results_edt[,c(5:6,7,18,19,15)], method= "kendall")
-corrplot(cor_data, p.mat = cor_test$p, method= "circle", type= "upper", insig='blank', addCoef.col ='black', number.cex = 0.8, diag=FALSE)
-ggsave("/Users/sallydowd/Desktop/us_cor.png", width= 6, height=4)
+png(file = "/Users/sallydowd/Desktop/corrplot.usa.png", width= 5000, height=2000, res=300)
+corrplot(cor_data, p.mat = cor_test$p, method= "circle", type= "upper", insig='blank', addCoef.col ='black', number.cex = 1.0, diag=FALSE, tl.cex= 1.5, cl.cex= 1, cl.offset = 0.5)
+dev.off()
 
 Aus_risk_results_edt <- Aus_risk_results %>% mutate(avg_cat_vuln= (PC1_scores_pd + PC1_scores_pc + PC1_scores_lf + PC1_scores_hc)/4) %>% dplyr::select(-Hazard, -Exposure, -Vulnerability) %>% rename("Hazard"= "cumi_mean", "Exposure"= "INDP_fishing", "Vulnerability"= "avg_cat_vuln")
 colnames(Aus_risk_results_edt) 
 cor_data <- cor(Aus_risk_results_edt[,c(5,4,6,7,15,12)], method= "kendall")
 cor_test <- cor.mtest(Aus_risk_results_edt[,c(5,4,6,7,15,12)], method= "kendall")
-corrplot(cor_data, p.mat = cor_test$p, method= "circle", type= "upper", insig='blank', addCoef.col ='black', number.cex = 0.8, diag=FALSE)
-ggsave("/users/sallydowd/Desktop/Aus_cor.png", width= 6, height=4)
+png(file = "/Users/sallydowd/Desktop/corrplot.aus.png", width= 5000, height=2000, res=300)
+corrplot(cor_data, p.mat = cor_test$p, method= "circle", type= "upper", insig='blank', addCoef.col ='black', number.cex = 1.0, diag=FALSE, tl.cex= 1.5, cl.cex= 1, cl.offset = 0.5)
+dev.off()
 ```
 
 #### Table 1 & 2  
@@ -126,21 +117,6 @@ dragon %>% group_by(Region, driven_by) %>% tally() %>% mutate(num_communities= s
 
 dragon2 <- Aus_risk_results %>% mutate(driven_by= ifelse(Hazard > Vulnerability & Hazard > Exposure, "Hazard", ifelse(Vulnerability > Hazard & Vulnerability > Exposure, "Vulnerability", ifelse(Exposure > Hazard & Exposure > Vulnerability, "Exposure", "None")))) 
 dragon2 %>% group_by(State, driven_by) %>% tally() %>% mutate(num_communities= sum(n)) %>% mutate(prop= round((n/num_communities)*100, 1))
-```
-
-#### Table 3 & 4 
-```{r}
-#Highest and lowest 
-US_risk_vuln <- US_risk_results %>% dplyr::select(Community.Name, Region, PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc, PC1_scores_pov)
-US_risk_vuln <- US_risk_vuln %>% rowwise() %>% mutate(Max_score = names(.)[which.max(c(PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_pov, PC1_scores_hc)) + 2])
-
-US_comms <- US_risk_vuln %>% group_by(Region) %>% tally() %>% rename("com_num"= "n")
-US_risk_vuln %>% group_by(Region) %>% summarize(count_pd = sum(Max_score == "PC1_scores_pd"), count_pc = sum(Max_score == "PC1_scores_pc"), count_lf = sum(Max_score == "PC1_scores_lf"), count_pov = sum(Max_score == "PC1_scores_pov"), count_hc = sum(Max_score == "PC1_scores_hc")) %>% left_join(US_comms)
-
-Aus_risk_vuln <- Aus_risk_results %>% dplyr::select(LGA, State, PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc)
-Aus_risk_vuln <- Aus_risk_vuln %>% rowwise() %>% mutate(Max_score = names(.)[which.max(c(PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc)) + 2])
-Aus_comms <- Aus_risk_vuln %>% group_by(State) %>% tally() %>% rename("com_num"= "n")
-Aus_risk_vuln %>% group_by(State) %>% summarize(count_pd = sum(Max_score == "PC1_scores_pd"), count_pc = sum(Max_score == "PC1_scores_pc"), count_lf = sum(Max_score == "PC1_scores_lf"), count_hc = sum(Max_score == "PC1_scores_hc")) %>% left_join(Aus_comms)
 ```
 
 #### Other talking points 
@@ -217,3 +193,29 @@ ggarrange(plot1,plot2)
 ggsave("/users/sallydowd/Desktop/piechart.png", width= 7, height= 5)
 ```
 
+#### Fig. 3
+```{r}
+ggplot(US_transf_cat, aes(x= Risk, fill= RiskCategoryM1)) + geom_histogram(bins=30) + scale_fill_manual(
+    name = "Category", values = c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Count") + standard_theme + expand_limits(x= 0) + facet_wrap(~Region, ncol=5, scales= "free_y") + labs(tags= "A)")
+ggsave("/users/sallydowd/Desktop/risk.US.hist.png", width= 10, height= 3, dpi= 500)
+
+ggplot(Aus_transf_cat, aes(x= Risk, fill= RiskCategoryM1)) + geom_histogram(bins=20) + scale_fill_manual(
+    name = "Category", values = c("Low" = "darkgreen", "Medium" = "#0C7BDC", "Medium-high" = "#D35FB7", "High" = "#FFC20A"), labels = c("Low", "Medium", "Medium-high", "High")) + labs(x = "Risk", y = "Count") + standard_theme + expand_limits(x= 0) + facet_wrap(~State, ncol=7, scales= "free_y") + labs(tags= "B)") + theme(legend.position= "none")
+ggsave("/users/sallydowd/Desktop/risk.aus.hist.png", width= 10, height= 3, dpi= 500)
+```
+
+
+#### Table 3 & 4 
+```{r}
+#Highest and lowest 
+US_risk_vuln <- US_risk_results %>% dplyr::select(Community.Name, Region, PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc, PC1_scores_pov)
+US_risk_vuln <- US_risk_vuln %>% rowwise() %>% mutate(Max_score = names(.)[which.max(c(PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_pov, PC1_scores_hc)) + 2])
+
+US_comms <- US_risk_vuln %>% group_by(Region) %>% tally() %>% rename("com_num"= "n")
+US_risk_vuln %>% group_by(Region) %>% summarize(count_pd = sum(Max_score == "PC1_scores_pd"), count_pc = sum(Max_score == "PC1_scores_pc"), count_lf = sum(Max_score == "PC1_scores_lf"), count_pov = sum(Max_score == "PC1_scores_pov"), count_hc = sum(Max_score == "PC1_scores_hc")) %>% left_join(US_comms)
+
+Aus_risk_vuln <- Aus_risk_results %>% dplyr::select(LGA, State, PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc)
+Aus_risk_vuln <- Aus_risk_vuln %>% rowwise() %>% mutate(Max_score = names(.)[which.max(c(PC1_scores_pd, PC1_scores_pc, PC1_scores_lf, PC1_scores_hc)) + 2])
+Aus_comms <- Aus_risk_vuln %>% group_by(State) %>% tally() %>% rename("com_num"= "n")
+Aus_risk_vuln %>% group_by(State) %>% summarize(count_pd = sum(Max_score == "PC1_scores_pd"), count_pc = sum(Max_score == "PC1_scores_pc"), count_lf = sum(Max_score == "PC1_scores_lf"), count_hc = sum(Max_score == "PC1_scores_hc")) %>% left_join(Aus_comms)
+```
