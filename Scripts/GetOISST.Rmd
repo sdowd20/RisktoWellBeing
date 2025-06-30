@@ -41,7 +41,7 @@ saveRDS(US_main_SST, file = paste("US_main_SST_V2.1", ".Rda", sep = ""))
 ##Get dataset of OISST points that are within a 111 km radius of each community   
 ```{r}
 ###Get dataset of OISST points that are within a 111 km radius of each community in US
-US_main_SST <- readRDS("/Users/sallydowd/Documents/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1/US_main_SST_V2.1.Rda") 
+US_main_SST <- readRDS("/Users/sallydowd/Google Drive/My Drive/Nye.lab/MHW.MCS/Data/Raw_SST/V2.1/US_main_SST_V2.1.Rda") 
 US_main_SST_final <- overlap_df(US_main_SST, radius1_US_main) ####Retains rows only with lat_lon within radius1
 US_main_SST_final3 <- overlap_df(US_main_SST, radius3_US_main)
 ####Visualization to confirm process accuracy

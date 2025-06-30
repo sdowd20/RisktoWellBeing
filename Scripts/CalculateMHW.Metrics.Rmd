@@ -32,6 +32,35 @@ US_main_dur_MHW_ld <- US_main_dur_MHW_ld[!is.na(US_main_dur_MHW_ld$dur_mean),]
 write.csv(US_main_dur_MHW_ld, "/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/US.main.dur.2016.V2.1.csv")
 ```
 
+```{r}
+US_main_cumi_MHW_ld <- metrics_df(only_US_main_orig, radius1_US_main, US_main_MHW_geom, 5)
+
+metrics_df <- function(df1, df2, df3){
+  df1$input_N<-NA
+  df1$input_mean<-NA
+  df1$input_var<-NA
+  df1$input_max<-NA
+  df1$input_min<-NA
+  for(i in 1:nrow(df1)){ #each row is a US community 
+    intersects <- as.data.frame(st_intersection(df2[i,], df3)) 
+    return(intersects)
+  }
+}
+t <- metrics_df(only_US_main_orig, radius1_US_main, US_main_MHW_geom)
+  
+    
+    df1$input_N[i]<-nrow(intersects) #Rows correspond to # of lat/lon points 
+    intersects <- intersects[,number] #select column with the metric you're interested in, now when you call intersects df it'll be to calculate stats around metric of interest
+    df1$input_mean[i]<-mean(intersects)
+    df1$input_var[i]<-var(intersects)
+    df1$input_max[i]<-max(intersects)
+    df1$input_min[i]<-min(intersects)  
+  }
+  df1 <- df1[order(df1$input_mean, decreasing = TRUE) ,]
+  return(df1)
+}
+```
+
 ##Link MHW statistics with each HI community for 2012-2016 
 ```{r}
 ###Cumulative intensity

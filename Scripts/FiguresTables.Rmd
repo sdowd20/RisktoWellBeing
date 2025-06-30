@@ -148,6 +148,29 @@ Aus_indicator_data_final <- read.csv("/Users/sallydowd/Documents/GitHub/Nye-rese
 #236-209
 ```
 
+```{r}
+#Data availability for calculation of MHW intensity and hazards
+##U.S. 
+US_main_MHW <- read_csv("/Users/sallydowd/Documents/GitHub/Nye-research-technicians/MHW.MCS/Data/MHW.block.main.V2.1.csv")
+US_main_MHW_geom = st_as_sf(US_main_MHW, coords=c("lon","lat"))
+US_main_MHW_geom <- US_main_MHW_geom %>% filter(between(year, 2012, 2016))
+
+metrics_df <- function(df1, df2, df3){
+df1$lat_lon_num <- NA
+df1$heatwave_num <- NA
+for(i in 1:nrow(df1)){ #each row is a US community 
+intersects <- as.data.frame(st_intersection(df2[i,], df3))
+df1$lat_lon_num[i] <- intersects %>% distinct(lat_lon) %>% nrow()  
+df1$heatwave_num[i] <- intersects %>% summarize(sum = sum(count))
+}
+return(df1)
+}
+
+t <-  metrics_df(only_US_main_orig, radius1_US_main, US_main_MHW_geom)
+
+t %>% mutate(Community.Name = paste(Community.Name, State, sep= ", ")) %>% filter(Community.Name %in% US_scores_MHW$Community.Name) %>% summarize(min_coord= min(lat_lon_num), max_coord= max(lat_lon_num), mean_coord = mean(lat_lon_num), total_coord = sum(lat_lon_num))
+```
+
 ### Appendix A: 
 
 #### Fig. 1
